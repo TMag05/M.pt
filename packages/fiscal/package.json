@@ -1,0 +1,17 @@
+{
+  "name": "@mpt/fiscal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build:web": "esbuild src/browser.ts --bundle --format=iife --target=es2020 --outfile=../../web/public/engine.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

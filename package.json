@@ -1,0 +1,16 @@
+{
+  "name": "m.pt",
+  "private": true,
+  "description": "Matrícula PT — custo final de importar carros e motos para Portugal",
+  "scripts": {
+    "install:all": "npm ci --prefix packages/fiscal && npm ci --prefix functions",
+    "test": "npm test --prefix packages/fiscal && npm test --prefix functions",
+    "typecheck": "npm run typecheck --prefix packages/fiscal && npm run typecheck --prefix functions",
+    "build": "npm run build:web --prefix packages/fiscal && npm run build --prefix functions",
+    "serve": "npm run build && firebase emulators:start",
+    "deploy": "npm run build && firebase deploy"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,1221 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Calcule o ISV, IVA e IUC de um carro ou moto importado para Portugal e compare com o mercado português.">
+<title>Matrícula PT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,600;112,800;125,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: SOTF-style — grey ground, stacked white boxed nav on the left, thin-bordered tiles, mono uppercase UI, one grainy gradient block for the total. */
+:root {
+  --ground: #d6d7d9;
+  --tile: #ffffff;
+  --ink: #121314;
+  --muted: #66696e;
+  --line: #b9bbbf;
+  --hair: #e3e4e6;
+  --red: #e1001a;
+  --block: #111214;
+  --block-ink: #ffffff;
+  --ok: #18733a;
+  --warn: #a35f00;
+  --field: #f4f4f5;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --display: "Archivo", "Arial Narrow", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ground: #0e0f10; --tile: #18191b; --ink: #ececed; --muted: #9b9ea4; --line: #34363a; --hair: #26282b;
+  --red: #ff3346; --block: #ececed; --block-ink: #111214; --ok: #4fc477; --warn: #f0a23a; --field: #212226; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --ground: #0e0f10; --tile: #18191b; --ink: #ececed; --muted: #9b9ea4; --line: #34363a; --hair: #26282b;
+  --red: #ff3346; --block: #ececed; --block-ink: #111214; --ok: #4fc477; --warn: #f0a23a; --field: #212226; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.5; }
+.mono, label, .lbl, button, .nav a, .chip, th { font-family: var(--mono); }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+.shell { display: grid; grid-template-columns: 228px minmax(0, 1fr); gap: 12px; padding-block: 12px 40px;
+  padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); max-width: 1480px; margin: 0 auto; }
+@media (max-width: 960px) { .shell { grid-template-columns: minmax(0,1fr); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); } }
+
+/* ---- left rail ---- */
+.rail { position: sticky; top: calc(12px + env(safe-area-inset-top, 0px)); align-self: start; display: grid; gap: 4px; }
+.brand { display: grid; grid-template-columns: auto 1fr; background: var(--tile); border: 1px solid var(--line); }
+.brand .mark { font-family: var(--display); font-weight: 800; font-variation-settings: "wdth" 125; font-size: 22px; letter-spacing: .06em; padding: 10px 12px; border-right: 1px solid var(--line); }
+.brand .sub { font-family: var(--mono); font-size: 9.5px; line-height: 1.25; letter-spacing: .08em; text-transform: uppercase; padding: 9px 10px; align-self: center; }
+.nav { display: grid; gap: 4px; }
+.nav a { display: flex; justify-content: space-between; align-items: center; background: var(--tile); border: 1px solid var(--line); padding: 11px 12px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; }
+.nav a:hover { border-color: var(--ink); }
+.nav a[aria-current="page"] { color: var(--red); }
+.nav a span { color: var(--muted); }
+.rail .ruleset { background: var(--block); color: var(--block-ink); padding: 11px 12px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; line-height: 1.45; }
+@media (max-width: 960px) {
+  .rail { position: static; grid-template-columns: minmax(0,1fr); }
+  .nav { grid-auto-flow: column; grid-auto-columns: max-content; overflow-x: auto; scrollbar-width: none; }
+  .nav a { gap: 10px; }
+  .rail .ruleset { display: none; }
+}
+
+/* ---- top strip ---- */
+.main { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-content: start; }
+.strip { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.strip > * { background: var(--tile); border: 1px solid var(--line); font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; padding: 8px 12px; }
+.ticker { flex: 1 1 320px; overflow: hidden; white-space: nowrap; color: var(--muted); min-width: 0; }
+.ticker span { display: inline-block; animation: tick 48s linear infinite; }
+@keyframes tick { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+@media (prefers-reduced-motion: reduce) { .ticker span { animation: none; } }
+.seg { display: inline-flex; padding: 0 !important; }
+.seg button { border: 0; background: transparent; color: var(--muted); padding: 8px 12px; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { color: var(--ink); background: var(--field); font-weight: 600; }
+
+/* ---- tiles & grid ---- */
+.view[hidden] { display: none !important; }
+.cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+@media (max-width: 1100px) { .cols { grid-template-columns: minmax(0,1fr); } #resultCol { position: static !important; } }
+.tile { background: var(--tile); border: 1px solid var(--line); }
+.tile > header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+.tile > header small { color: var(--muted); letter-spacing: .06em; font-size: 10px; text-align: right; }
+.pad { padding: 14px; }
+.stack { display: grid; gap: 12px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+.h-display { font-family: var(--display); font-weight: 800; font-variation-settings: "wdth" 112; text-transform: uppercase; letter-spacing: -.01em; line-height: .95; }
+
+/* ---- form ---- */
+.fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border-top: 1px solid var(--hair); }
+.f { display: grid; gap: 4px; padding: 10px 14px; border-bottom: 1px solid var(--hair); border-right: 1px solid var(--hair); min-width: 0; }
+.f label, .lbl { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 6px; align-items: center; }
+input, select, textarea { font: 500 15px/1.3 var(--sans); color: var(--ink); background: var(--field); border: 1px solid transparent; border-radius: 0; padding: 8px 9px; width: 100%; min-width: 0; font-variant-numeric: tabular-nums; }
+input:hover, select:hover, textarea:hover { border-color: var(--line); }
+input:focus, select:focus, textarea:focus { border-color: var(--ink); outline: none; }
+textarea { font: 13px/1.45 var(--mono); resize: vertical; min-height: 92px; }
+.f label.check, label.check { display: flex; gap: 8px; align-items: center; font-family: var(--sans); font-size: 13.5px; text-transform: none; letter-spacing: 0; color: var(--ink); cursor: pointer; }
+.check input { width: 16px; height: 16px; accent-color: var(--red); }
+.src { font-size: 9px; letter-spacing: .08em; padding: 1px 5px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.src.coc { color: var(--ok); border-color: currentColor; }
+.src.anuncio, .src.estimado { color: var(--warn); border-color: currentColor; }
+.sub-h { padding: 8px 14px; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; background: var(--field); border-bottom: 1px solid var(--hair); display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--ink); background: var(--tile); color: var(--ink); padding: 10px 14px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; text-decoration: none; }
+.btn.solid { background: var(--block); color: var(--block-ink); border-color: var(--block); }
+.btn.link { border: 0; padding: 0; background: none; text-decoration: underline; text-underline-offset: 3px; font-size: 10px; }
+.row-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px; }
+.hide-moto[hidden], .only-phev[hidden] { display: none !important; }
+
+.url-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 6px; }
+.url-row input { font-size: 14px; }
+.implog { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-family: var(--mono); font-size: 11.5px; }
+.implog li { padding-left: 18px; position: relative; color: var(--muted); }
+.implog li::before { position: absolute; left: 0; }
+.implog li.run::before { content: "…"; color: var(--ink); }
+.implog li.ok::before { content: "✓"; color: var(--ok); }
+.implog li.warn::before { content: "!"; color: var(--warn); }
+.implog li.err::before { content: "×"; color: var(--red); }
+.implog li.info::before { content: "i"; }
+.implog li.ok { color: var(--ink); }
+.pt-head { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--hair); }
+.pt-head > div { padding: 10px 12px; display: grid; gap: 2px; }
+.pt-head > div + div { border-left: 1px solid var(--hair); }
+.pt-head .big { font-family: var(--display); font-weight: 800; font-variation-settings: "wdth" 112; font-size: 26px; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.pt-head small { color: var(--muted); font-size: 12px; }
+.pt-bar { position: relative; height: 34px; margin: 6px 8px 0; }
+.pt-bar::before { content: ""; position: absolute; left: 0; right: 0; top: 16px; height: 1px; background: var(--line); }
+.pt-bar .rng { position: absolute; top: 12px; height: 9px; background: var(--field); border: 1px solid var(--line); }
+.pt-bar .dot { position: absolute; top: 13px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: var(--muted); }
+.pt-bar .med { position: absolute; top: 6px; width: 2px; height: 21px; margin-left: -1px; background: var(--ink); }
+.pt-bar .me { position: absolute; top: 4px; width: 14px; height: 14px; margin-left: -7px; background: var(--red); transform: rotate(45deg) translateY(4px); }
+.pt-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.pt-legend i { display: inline-block; width: 9px; height: 9px; margin-right: 6px; vertical-align: -1px; }
+.pt-legend .k-me { background: var(--red); transform: rotate(45deg); }
+.pt-legend .k-dot { background: var(--muted); border-radius: 50%; }
+.pt-legend .k-med { width: 2px; background: var(--ink); }
+/* ---- grain total ---- */
+.grain { position: relative; overflow: hidden; color: #fff; padding: 18px 18px 16px; isolation: isolate; min-height: 230px; display: grid; align-content: space-between; gap: 18px;
+  background:
+    radial-gradient(120% 90% at 18% 85%, #ffd23a 0%, rgba(255,210,58,0) 45%),
+    radial-gradient(90% 120% at 50% 40%, #ff3a1f 0%, rgba(255,58,31,0) 60%),
+    radial-gradient(80% 90% at 95% 10%, #c4006b 0%, rgba(196,0,107,0) 60%),
+    radial-gradient(80% 100% at 0% 0%, #0f6b5a 0%, rgba(15,107,90,0) 65%),
+    linear-gradient(135deg, #1c7d5f, #e8251a 55%, #b5005a);
+}
+.grain::after { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .55; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1.1 -0.2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+.grain .eyebrow { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.grain .total { font-family: var(--display); font-weight: 800; font-variation-settings: "wdth" 112; font-size: clamp(44px, 7.2vw, 84px); line-height: .9; letter-spacing: -.02em; font-variant-numeric: tabular-nums; text-shadow: 0 1px 0 rgba(0,0,0,.08); }
+.grain .vs { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.pill { display: inline-block; padding: 3px 8px; background: #fff; color: #111; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; font-weight: 600; }
+.pill.bad { background: #111; color: #fff; }
+
+/* ---- breakdown ---- */
+.lines { display: grid; }
+.line { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--hair); align-items: baseline; }
+.line .k { font-family: var(--mono); font-size: 11.5px; letter-spacing: .07em; text-transform: uppercase; }
+.line .v { font-variant-numeric: tabular-nums; font-weight: 600; font-family: var(--sans); white-space: nowrap; }
+.line.sum { background: var(--field); }
+.line.sum .k, .line.sum .v { font-weight: 600; }
+details.grp > summary { list-style: none; cursor: pointer; }
+details.grp > summary::-webkit-details-marker { display: none; }
+details.grp > summary .k::before { content: "+ "; color: var(--red); }
+details.grp[open] > summary .k::before { content: "− "; }
+.part { padding: 10px 14px 10px 30px; border-bottom: 1px dashed var(--hair); display: grid; gap: 3px; }
+.part .top { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; font-weight: 500; }
+.part .top span:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.part p { margin: 0; color: var(--muted); font-size: 13px; max-width: 62ch; }
+.part .lex { font-family: var(--mono); font-size: 10.5px; color: var(--muted); letter-spacing: .03em; }
+.part .est { color: var(--warn); font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+
+/* ---- alerts ---- */
+.alerts { display: grid; }
+.al { display: grid; grid-template-columns: 78px minmax(0,1fr); gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--hair); }
+.al .sev { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 0; text-align: center; border: 1px solid currentColor; height: max-content; }
+.al.crit .sev { color: var(--red); } .al.warn .sev { color: var(--warn); } .al.info .sev { color: var(--muted); }
+.al b { display: block; font-weight: 600; font-size: 14px; }
+.al p { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; }
+.fine { font-size: 12.5px; color: var(--muted); padding: 12px 14px; margin: 0; }
+
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); }
+.kv > div { padding: 12px 14px; border-right: 1px solid var(--hair); border-bottom: 1px solid var(--hair); display: grid; gap: 2px; }
+.kv .big { font-family: var(--display); font-weight: 800; font-variation-settings: "wdth" 112; font-size: 26px; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.kv small { color: var(--muted); font-size: 12px; }
+
+/* ---- tables ---- */
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+th { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 500; text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 14px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+td.n, th.n { text-align: right; white-space: nowrap; }
+tr.me td { background: var(--field); font-weight: 600; }
+
+/* ---- search ---- */
+.sites { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 4px; }
+.site { background: var(--tile); border: 1px solid var(--line); display: grid; grid-template-rows: auto 1fr auto; text-decoration: none; min-height: 150px; }
+.site:hover { border-color: var(--ink); }
+.site .top { display: flex; justify-content: space-between; padding: 9px 12px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.site .name { padding: 6px 12px; font-family: var(--display); font-weight: 800; font-variation-settings: "wdth" 112; font-size: 22px; text-transform: uppercase; line-height: 1; }
+.site .note { padding: 0 12px 10px; font-size: 12.5px; color: var(--muted); }
+.site .go { border-top: 1px solid var(--hair); padding: 8px 12px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; display: flex; justify-content: space-between; }
+.site .go span:last-child { color: var(--red); }
+.site.third .top b { color: var(--warn); }
+.group-h { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; padding: 14px 2px 6px; display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+.group-h small { color: var(--muted); }
+
+
+/* ---- in-app search results ---- */
+.s-filters .fgrid { grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); }
+.demo-band { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 4px 14px; align-items: baseline; border: 1px dashed var(--warn); background: var(--tile); padding: 10px 14px; font-size: 13px; color: var(--muted); }
+.demo-band b { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--warn); font-weight: 600; }
+@media (max-width: 640px) { .demo-band { grid-template-columns: minmax(0,1fr); } }
+.res-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 2px 0; }
+.res-head small { color: var(--muted); letter-spacing: .06em; }
+.results { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 4px; }
+.card { background: var(--tile); border: 1px solid var(--line); display: grid; grid-template-rows: auto auto 1fr auto; min-width: 0; }
+.card:hover { border-color: var(--ink); }
+.gal { position: relative; display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; aspect-ratio: 16 / 9; max-width: 100%; background: var(--hair); overflow: hidden; }
+.gal > div { min-height: 0; overflow: hidden; }
+.gal > div:first-child { grid-row: 1 / 3; }
+.gal svg { width: 100%; height: 100%; display: block; }
+.gal .tag { position: absolute; left: 8px; top: 8px; background: var(--tile); color: var(--warn); border: 1px solid var(--warn); font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; padding: 2px 6px; }
+.gal .cc { position: absolute; right: 8px; top: 8px; background: var(--block); color: var(--block-ink); font-family: var(--mono); font-size: 10px; letter-spacing: .1em; padding: 2px 6px; }
+.card .meta { padding: 10px 12px 4px; display: grid; gap: 2px; }
+.card .meta h3 { font-family: var(--display); font-weight: 800; font-variation-settings: "wdth" 112; font-size: 18px; text-transform: uppercase; line-height: 1.05; }
+.card .meta span { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .03em; }
+.card .money { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--hair); margin-top: 8px; }
+.card .money > div { padding: 9px 12px; display: grid; gap: 1px; align-content: start; }
+.card .money > div + div { border-left: 1px solid var(--hair); }
+.card .money .lbl { font-size: 9.5px; }
+.card .money .p { font-variant-numeric: tabular-nums; font-size: 16px; font-weight: 600; }
+.card .money .t { font-family: var(--display); font-weight: 800; font-variation-settings: "wdth" 112; font-size: 24px; font-variant-numeric: tabular-nums; line-height: 1.05; color: var(--red); }
+.card .money small { font-size: 11.5px; color: var(--muted); }
+.card .money small.good { color: var(--ok); }
+.card .acts { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line); }
+.card .acts > * { border: 0; background: none; color: var(--ink); padding: 10px 12px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; text-decoration: none; cursor: pointer; display: flex; justify-content: space-between; gap: 6px; }
+.card .acts > * + * { border-left: 1px solid var(--line); }
+.card .acts a span { color: var(--red); }
+.empty { background: var(--tile); border: 1px solid var(--line); padding: 24px 16px; color: var(--muted); grid-column: 1 / -1; }
+
+/* ---- guide ---- */
+.steps { display: grid; }
+.step { display: grid; grid-template-columns: 56px minmax(0,1fr); border-bottom: 1px solid var(--hair); }
+.step .no { font-family: var(--display); font-weight: 800; font-variation-settings: "wdth" 125; font-size: 26px; padding: 12px 0 0 14px; color: var(--red); }
+.step .body { padding: 12px 14px 12px 0; }
+.step h3 { font-size: 15px; font-weight: 600; }
+.step p { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; max-width: 70ch; }
+.step .when { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink); margin-top: 6px; display: inline-block; border: 1px solid var(--line); padding: 2px 6px; }
+.docs { list-style: none; margin: 0; padding: 0; }
+.docs li { border-bottom: 1px solid var(--hair); padding: 9px 14px; }
+.hero-band { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); border: 1px solid var(--line); background: var(--tile); }
+.hero-band > div { padding: 18px; }
+.hero-band > div + div { border-left: 1px solid var(--line); }
+.hero-band h1 { font-size: clamp(30px, 4.6vw, 54px); }
+.hero-band p { margin: 10px 0 0; color: var(--muted); max-width: 58ch; }
+@media (max-width: 760px) { .hero-band { grid-template-columns: minmax(0,1fr); } .hero-band > div + div { border-left: 0; border-top: 1px solid var(--line); } }
+.mbar { display: none; }
+@media (max-width: 1100px) {
+  .mbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; justify-content: space-between; align-items: center; gap: 12px; text-decoration: none;
+    background: var(--block); color: var(--block-ink); font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+  .mbar b { font-family: var(--display); font-variation-settings: "wdth" 112; font-weight: 800; font-size: 22px; letter-spacing: 0; }
+  .mbar[hidden] { display: none; }
+  .shell { padding-block-end: 90px; }
+}
+.toast { position: fixed; right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--block); color: var(--block-ink); font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; padding: 10px 14px; z-index: 20; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="brand"><div class="mark">M·PT</div><div class="sub">Matrícula PT<br>importar carro ou moto</div></div>
+    <nav class="nav" aria-label="Secções">
+      <a href="#calcular" data-view="calcular">Calcular custo <span>01</span></a>
+      <a href="#preco-maximo" data-view="preco-maximo">Preço máximo <span>02</span></a>
+      <a href="#procurar" data-view="procurar">Pesquisar viaturas <span>03</span></a>
+      <a href="#guia" data-view="guia">Guia legal <span>04</span></a>
+      <a href="#tabelas" data-view="tabelas">Tabelas 2026 <span>05</span></a>
+    </nav>
+    <div class="ruleset">Tabelas PT-2026.1<br>ISV · IVA · IUC<br>em vigor de 01/01 a 31/12/2026</div>
+  </aside>
+
+  <main class="main">
+    <div class="strip">
+      <div class="ticker" aria-hidden="true"><span id="ticker"></span></div>
+      <div class="seg" role="group" aria-label="Tipo de viatura">
+        <button type="button" id="t_carro" aria-pressed="true">Carro</button>
+        <button type="button" id="t_moto" aria-pressed="false">Moto</button>
+      </div>
+      <div>Estimativa · não é liquidação oficial</div>
+    </div>
+
+    <!-- ================= 01 CALCULAR ================= -->
+    <section class="view" id="v-calcular">
+      <div class="cols">
+        <div class="stack">
+          <div class="tile">
+            <header>Importar anúncio <small>Link ou texto de mobile.de, AutoScout24, leboncoin, Standvirtual…</small></header>
+            <div class="pad stack" style="gap:10px">
+              <div class="url-row">
+                <input id="adUrl" type="url" inputmode="url" placeholder="https://suchen.mobile.de/fahrzeuge/details.html?id=…" aria-label="Link do anúncio">
+                <button class="btn solid" type="button" id="btnImport">Importar</button>
+              </div>
+              <details id="pasteBox">
+                <summary class="lbl" style="cursor:pointer;justify-content:flex-start">+ Ou colar o texto do anúncio (Ctrl+A, Ctrl+C na página do anúncio)</summary>
+                <textarea id="paste" aria-label="Texto do anúncio" style="margin-top:8px"></textarea>
+              </details>
+              <ol class="implog" id="impLog" hidden></ol>
+              <button type="button" id="btnExtract" hidden></button>
+              <span class="mono" id="extractMsg" style="font-size:11px;color:var(--muted)">Cole o link e carregue em Importar. Os dados em falta são completados e marcados a laranja.</span>
+            </div>
+          </div>
+
+          <div class="tile">
+            <header>Viatura <small>Campos do COC (Certificado de Conformidade)</small></header>
+            <div class="fgrid">
+              <div class="f"><label for="v_marca">Marca</label><input id="v_marca" autocomplete="off"></div>
+              <div class="f"><label for="v_modelo">Modelo / versão</label><input id="v_modelo" autocomplete="off"></div>
+              <div class="f"><label for="v_prop">Motorização</label>
+                <select id="v_prop"></select></div>
+              <div class="f hide-moto"><label for="v_fuel">Combustível</label>
+                <select id="v_fuel"><option value="gasolina">Gasolina</option><option value="gasoleo">Gasóleo</option></select></div>
+              <div class="f"><label for="v_cc">Cilindrada cm³ <span class="src" data-src="cc"></span></label><input id="v_cc" type="number" inputmode="numeric" min="0"></div>
+              <div class="f hide-moto"><label for="v_co2">CO₂ g/km <span class="src" data-src="co2"></span></label><input id="v_co2" type="number" inputmode="numeric" min="0"></div>
+              <div class="f hide-moto"><label for="v_norma">Norma CO₂ <span class="src" data-src="norma"></span></label>
+                <select id="v_norma"><option value="WLTP">WLTP (desde 09/2018)</option><option value="NEDC">NEDC</option></select></div>
+              <div class="f only-phev"><label for="v_autonomia">Autonomia elétrica km <span class="src" data-src="autonomia"></span></label><input id="v_autonomia" type="number" inputmode="numeric" min="0"></div>
+              <div class="f"><label for="v_firstReg">1.ª matrícula <span class="src" data-src="firstReg"></span></label><input id="v_firstReg" type="date"></div>
+              <div class="f"><label for="v_km">Quilómetros <span class="src" data-src="km"></span></label><input id="v_km" type="number" inputmode="numeric" min="0"></div>
+            </div>
+            <div class="fgrid">
+              <div class="f hide-moto"><span class="lbl">Gasóleo</span><label class="check" for="v_particulas"><input type="checkbox" id="v_particulas"> Partículas &lt; 0,001 g/km no COC</label></div>
+              <div class="f only-phev"><span class="lbl">PHEV</span><label class="check" for="v_euro6ebis"><input type="checkbox" id="v_euro6ebis"> Homologado Euro 6e-bis</label></div>
+              <div class="f"><span class="lbl">Documentos</span><label class="check" for="v_coc"><input type="checkbox" id="v_coc"> Tenho o COC (ou n.º de homologação)</label></div>
+            </div>
+            <div class="row-actions"><button class="btn" type="button" id="btnCOC">Marcar dados técnicos como confirmados no COC</button></div>
+          </div>
+
+          <div class="tile">
+            <header>Negócio e origem <small>Decide o IVA e a redução por idade</small></header>
+            <div class="fgrid">
+              <div class="f"><label for="c_pais">País de origem</label><select id="c_pais"></select></div>
+              <div class="f"><label for="c_vendedor">Vendedor</label>
+                <select id="c_vendedor">
+                  <option value="particular">Particular</option>
+                  <option value="margem">Stand · regime da margem</option>
+                  <option value="geral">Stand · IVA dedutível (regime geral)</option>
+                </select></div>
+              <div class="f"><label for="c_comprador">Comprador</label>
+                <select id="c_comprador"><option value="particular">Particular</option><option value="empresa">Empresa (NIF PT)</option></select></div>
+              <div class="f"><label for="v_price">Preço do anúncio € <span class="src" data-src="price"></span></label><input id="v_price" type="number" inputmode="decimal" min="0" step="50"></div>
+              <div class="f"><label for="c_transport">Transporte até PT €</label><input id="c_transport" type="number" inputmode="decimal" min="0" step="50"></div>
+              <div class="f"><label for="c_ptPrice">Mesmo modelo em PT €</label><input id="c_ptPrice" type="number" inputmode="decimal" min="0" step="100"></div>
+              <div class="f"><label for="c_arrival">Chegada a Portugal</label><input id="c_arrival" type="date"></div>
+              <div class="f"><label for="c_davDate">Data prevista da DAV</label><input id="c_davDate" type="date"></div>
+              <div class="f" id="dutyBox" hidden><span class="lbl">Fora da UE</span><label class="check" for="c_dutyZero"><input type="checkbox" id="c_dutyZero"> Origem preferencial (0% direitos)</label></div>
+            </div>
+            <div class="sub-h">Custos de legalização <span>valores indicativos, editáveis</span></div>
+            <div class="fgrid">
+              <div class="f"><label for="k_inspecao">Inspeção Mod. 112 €</label><input id="k_inspecao" type="number" min="0"></div>
+              <div class="f"><label for="k_registo">Registo €</label><input id="k_registo" type="number" min="0"></div>
+              <div class="f"><label for="k_chapas">Chapas €</label><input id="k_chapas" type="number" min="0"></div>
+              <div class="f"><label for="k_despachante">Despachante €</label><input id="k_despachante" type="number" min="0"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack" style="position:sticky;top:calc(12px + env(safe-area-inset-top, 0px))" id="resultCol">
+          <div class="grain">
+            <div class="eyebrow"><span>Custo final legalizado em Portugal</span><span id="r_title"></span></div>
+            <div class="total" id="r_total">—</div>
+            <div class="vs" id="r_vs"></div>
+          </div>
+          <div class="tile">
+            <header>Detalhe <small id="r_tables"></small></header>
+            <div class="lines" id="r_lines"></div>
+          </div>
+          <div class="tile">
+            <header>Alertas <small id="r_alcount"></small></header>
+            <div class="alerts" id="r_alerts"></div>
+          </div>
+          <div class="tile" id="ptTile">
+            <header>Comparar com Portugal <small>Anúncios à venda em PT · só o valor final</small></header>
+            <div class="pad stack" style="gap:10px">
+              <div class="pt-cmp" id="ptCmp"><p class="fine" style="padding:0">Procura no Standvirtual o mesmo modelo, com ano ±1 e km parecidos, e compara os preços pedidos com o seu custo final legalizado.</p></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <button class="btn solid" type="button" id="btnPT">Comparar com o mercado PT</button>
+                <a class="btn" id="ptLink" href="https://www.standvirtual.com/carros" target="_blank" rel="noopener noreferrer">Abrir no Standvirtual ↗</a>
+              </div>
+              <details id="ptPasteBox">
+                <summary class="lbl" style="cursor:pointer;justify-content:flex-start">+ Ou colar a página de resultados do Standvirtual</summary>
+                <textarea id="ptPaste" aria-label="Texto da página de resultados" style="margin-top:8px"></textarea>
+              </details>
+              <ol class="implog" id="ptLog" hidden></ol>
+            </div>
+          </div>
+          <div class="tile">
+            <div class="kv" id="r_kv"></div>
+            <p class="fine">Estimativa com base nas tabelas em vigor. Quem liquida o ISV e o IVA é a Autoridade Tributária, na DAV (Declaração Aduaneira de Veículo). Confirme sempre no simulador do Portal das Finanças antes de pagar a viatura.</p>
+            <div class="row-actions" style="border-top:1px solid var(--hair)">
+              <button class="btn solid" type="button" id="btnCopy">Copiar resumo</button>
+              <a class="btn" href="#preco-maximo">Quanto posso pagar?</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 02 PREÇO MÁXIMO ================= -->
+    <section class="view" id="v-preco-maximo" hidden>
+      <div class="stack">
+        <div class="hero-band">
+          <div>
+            <h1 class="h-display">Quanto posso pagar lá fora?</h1>
+            <p>Diga quanto quer gastar no total, já com a viatura matriculada. A app tira o ISV, o IVA, o transporte e a legalização e mostra o preço máximo a pagar no anúncio, para cada ano de matrícula. Usa a viatura e o negócio do separador Calcular.</p>
+          </div>
+          <div class="stack" style="align-content:center">
+            <div class="f" style="border:0;padding:0"><label for="b_budget">Custo final máximo em Portugal €</label><input id="b_budget" type="number" min="0" step="500" style="font-size:22px"></div>
+            <div class="mono" style="font-size:12px;color:var(--muted)" id="b_vehicle"></div>
+          </div>
+        </div>
+        <div class="tile">
+          <header>Preço máximo no anúncio por ano de 1.ª matrícula <small>DAV em <span id="b_dav"></span> · km estimados 15 000/ano</small></header>
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Ano</th><th class="n">Redução ISV</th><th class="n">ISV</th><th class="n">IVA em PT</th><th class="n">Preço máximo</th><th></th></tr></thead>
+            <tbody id="b_rows"></tbody>
+          </table></div>
+          <p class="fine">Anos com "novo para IVA" aparecem quando a viatura tem até 6 meses ou até 6 000 km: o IVA de 23% em Portugal entra no cálculo.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 03 PROCURAR ================= -->
+    <section class="view" id="v-procurar" hidden>
+      <div class="stack">
+        <div class="tile s-filters">
+          <header>Pesquisar viaturas <small>Resultados ordenados pelo custo final legalizado em Portugal</small></header>
+          <div class="fgrid">
+            <div class="f"><label for="s_marca">Marca</label><select id="s_marca"></select></div>
+            <div class="f"><label for="s_modelo">Modelo</label><select id="s_modelo"></select></div>
+            <div class="f"><label for="s_ano">Ano de</label><select id="s_ano"></select></div>
+            <div class="f"><label for="s_anoMax">Ano até</label><select id="s_anoMax"></select></div>
+            <div class="f"><label for="s_km">Km até</label><select id="s_km">
+              <option value="">Qualquer</option><option>20000</option><option>50000</option><option>80000</option><option selected>120000</option><option>150000</option><option>200000</option></select></div>
+            <div class="f"><label for="s_cor">Cor</label><select id="s_cor"></select></div>
+            <div class="f"><label for="s_fuel">Combustível</label><select id="s_fuel">
+              <option value="">Qualquer</option><option value="gasolina">Gasolina</option><option value="gasoleo">Gasóleo</option><option value="HEV">Híbrido</option><option value="PHEV">Híbrido plug-in</option><option value="BEV">Elétrico</option></select></div>
+            <div class="f"><label for="s_preco">Preço até €</label><input id="s_preco" type="number" min="0" step="500" placeholder="Qualquer"></div>
+          </div>
+          <div class="row-actions">
+            <button class="btn solid" type="button" id="btnSearch">Pesquisar</button>
+            <button class="btn" type="button" id="btnFromBudget">Usar o meu preço máximo</button>
+            <label class="lbl" for="s_sort" style="margin-left:auto;gap:8px">Ordenar
+              <select id="s_sort" style="width:auto;font-size:13px;padding:6px 8px"><option value="total">Custo final em PT</option><option value="saving">Maior poupança</option><option value="price">Preço do anúncio</option><option value="km">Quilómetros</option><option value="year">Mais recente</option></select></label>
+          </div>
+        </div>
+
+        <div class="demo-band" id="s_demo">
+          <b>Modo demonstração</b>
+          <span>Os anúncios abaixo são exemplos gerados pela app, com fotos ilustrativas. Os preços e o custo final são calculados a sério, com as tabelas de 2026. Os anúncios reais entram quando a app estiver ligada a uma API oficial (mobile.de Search API ou parceria AutoScout24). O botão de cada cartão abre a mesma pesquisa no site real.</span>
+        </div>
+
+        <div class="res-head"><span id="s_count"></span><small id="s_note"></small></div>
+        <div class="results" id="s_results"></div>
+
+        <details class="tile" id="s_sitesWrap">
+          <summary class="sub-h" style="cursor:pointer;background:var(--tile)">Pesquisar diretamente nos sites <span>16 sites, já filtrados</span></summary>
+          <div class="pad" id="s_groups"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ================= 04 GUIA ================= -->
+    <section class="view" id="v-guia" hidden>
+      <div class="stack">
+        <div class="hero-band">
+          <div>
+            <h1 class="h-display">Do anúncio à matrícula portuguesa</h1>
+            <p>O processo do IMT e da AT para um usado vindo de outro país da UE, com os prazos que contam. A janela crítica são os 20 dias úteis entre a chegada a Portugal e a DAV.</p>
+          </div>
+          <div class="stack" style="align-content:center">
+            <div class="f" style="border:0;padding:0"><label for="g_arrival">Data de chegada a Portugal</label><input id="g_arrival" type="date"></div>
+            <div class="kv" style="border:1px solid var(--hair)" id="g_plan"></div>
+          </div>
+        </div>
+        <div class="cols">
+          <div class="tile">
+            <header>Passos <small>Ordem do IMT, com COC</small></header>
+            <div class="steps" id="g_steps"></div>
+          </div>
+          <div class="stack">
+            <div class="tile">
+              <header>Documentos para a DAV e o IMT <small>guardado neste browser</small></header>
+              <ul class="docs" id="g_docs"></ul>
+            </div>
+            <div class="tile">
+              <header>IVA · as três perguntas <small>RITI art. 6.º · DL 199/96</small></header>
+              <div class="tbl-wrap"><table>
+                <thead><tr><th>Viatura</th><th>Vendedor</th><th>Comprador</th><th>IVA em PT</th></tr></thead>
+                <tbody>
+                  <tr><td>Nova (≤ 6 meses ou ≤ 6 000 km)</td><td>Qualquer</td><td>Particular</td><td>23%, pago na DAV</td></tr>
+                  <tr><td>Nova</td><td>Qualquer</td><td>Operador ISV</td><td>23% em autoliquidação</td></tr>
+                  <tr><td>Usada</td><td>Particular</td><td>Qualquer</td><td>Nenhum</td></tr>
+                  <tr><td>Usada</td><td>Stand, regime da margem</td><td>Qualquer</td><td>Nenhum (IVA da origem incluído)</td></tr>
+                  <tr><td>Usada</td><td>Stand, regime geral</td><td>Empresa PT</td><td>23% em autoliquidação</td></tr>
+                  <tr><td>Usada</td><td>Stand, regime geral</td><td>Particular</td><td>Nenhum (paga o IVA da origem)</td></tr>
+                  <tr><td>Qualquer, fora da UE</td><td>Qualquer</td><td>Qualquer</td><td>Direitos + 23%</td></tr>
+                </tbody>
+              </table></div>
+            </div>
+            <div class="tile">
+              <header>Casos que a app não calcula <small>encaminhar</small></header>
+              <div class="alerts">
+                <div class="al info"><span class="sev">Isenção</span><div><b>Transferência de residência</b><p>Quem muda a residência para Portugal pode importar a sua viatura com isenção de ISV, cumprindo prazos de posse e residência. Tratar com a AT ou despachante.</p></div></div>
+                <div class="al info"><span class="sev">Isenção</span><div><b>Pessoas com deficiência</b><p>Isenção parcial de ISV com atestado de incapacidade multiuso e limites de CO₂. Pedido prévio à AT.</p></div></div>
+                <div class="al info"><span class="sev">Jurídico</span><div><b>ISV pago com a regra antiga</b><p>Há decisões do TJUE e do STA sobre usados importados. Uma eventual restituição exige parecer jurídico.</p></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 05 TABELAS ================= -->
+    <section class="view" id="v-tabelas" hidden>
+      <div class="stack">
+        <div class="hero-band">
+          <div>
+            <h1 class="h-display">Tabelas em vigor · 2026</h1>
+            <p>Todas as taxas vivem num conjunto de regras versionado (PT-2026.1). As tabelas do ISV de 2026 são as de 2024 e 2025; o Orçamento do Estado para 2026 (Lei n.º 73-A/2025) só alterou os PHEV homologados Euro 6e-bis, que mantêm a taxa de 25% até 80 g/km.</p>
+          </div>
+          <div class="stack" style="align-content:center;font-size:13px;color:var(--muted)">
+            <span class="mono" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink)">Fontes</span>
+            <span>Código do ISV, art. 7.º, 8.º, 10.º, 11.º e 20.º · Código do IUC, art. 10.º · RITI, art. 6.º · DL 199/96 · IMT, Matrícula de veículos usados.</span>
+            <span>Consultadas a 01/11/2026. Antes de pagar, confirme no simulador do Portal das Finanças.</span>
+          </div>
+        </div>
+        <div class="cols" id="t_tables"></div>
+      </div>
+    </section>
+  </main>
+</div>
+<button class="mbar" id="mbar" type="button" style="border:0;width:100%;cursor:pointer"><span>Custo final legalizado</span><b id="mbarTotal">—</b></button>
+<div class="toast" id="toast" hidden></div>
+
+<script src="engine.js"></script>
+<script>
+/* motor fiscal carregado de engine.js (packages/fiscal) */
+</script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const today = new Date();
+  const isoD = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  const plusDays = (n) => isoD(new Date(today.getTime() + n * 864e5));
+
+  const PAISES = [
+    ["DE","Alemanha","UE",19],["FR","França","UE",20],["ES","Espanha","UE",21],["IT","Itália","UE",22],["NL","Países Baixos","UE",21],
+    ["BE","Bélgica","UE",21],["AT","Áustria","UE",20],["LU","Luxemburgo","UE",17],["PL","Polónia","UE",23],["DK","Dinamarca","UE",25],
+    ["SE","Suécia","UE",25],["CZ","Chéquia","UE",21],["IE","Irlanda","UE",23],["FI","Finlândia","UE",25.5],
+    ["CH","Suíça","terceiro",8.1],["GB","Reino Unido","terceiro",20],["NO","Noruega","terceiro",25],["US","Estados Unidos","terceiro",0],["JP","Japão","terceiro",10]
+  ];
+  const PROPS = { carro: [["ICE","Combustão"],["HEV","Híbrido"],["PHEV","Híbrido plug-in"],["BEV","Elétrico"],["GNV","Gás natural"]], moto: [["ICE","Combustão"],["BEV","Elétrica"]] };
+
+  const EXAMPLE_PASTE = `VW Golf 2.0 TDI Life (EXEMPLO)
+18.900 € Brutto · Differenzbesteuert nach §25a UStG
+Erstzulassung 06/2020 · Kilometerstand 85.000 km
+Hubraum 1.968 cm³ · Leistung 85 kW (116 PS)
+Kraftstoff Diesel · CO₂-Emissionen (komb.) 120 g/km (WLTP)
+Schadstoffklasse Euro 6d · Händler · 80331 München`;
+
+  const S = {
+    v: { tipo: "carro", marca: "Volkswagen", modelo: "Golf 2.0 TDI", prop: "ICE", fuel: "gasoleo", cc: 1968, co2: 120, norma: "WLTP", particulas: true,
+         autonomia: 0, euro6ebis: false, firstReg: "2020-06-15", km: 85000, price: 18900, coc: true },
+    c: { pais: "DE", vendedor: "margem", comprador: "particular", transport: 900, ptPrice: 26500, arrival: plusDays(14), davDate: plusDays(21), dutyZero: false },
+    k: { inspecao: 90, registo: 65, chapas: 30, despachante: 0 },
+    src: { cc: "coc", co2: "coc", norma: "coc", particulas: "coc", autonomia: "coc", firstReg: "anuncio", km: "anuncio", price: "anuncio" },
+    budget: 24000,
+    docs: {}
+  };
+  try { const saved = JSON.parse(localStorage.getItem("mpt-docs") || "{}"); S.docs = saved || {}; } catch (e) {}
+
+  // ---------- ticker ----------
+  const tick = "DAV em 20 dias úteis após a chegada · ISV 2026 = tabelas de 2024/2025 · usado de particular na UE: sem IVA em PT · ≤ 6 meses ou ≤ 6 000 km: IVA 23% · sem COC: taxa IMT de 165 € · elétricos isentos de ISV e IUC · ";
+  $("ticker").textContent = tick + tick;
+
+  // ---------- selects ----------
+  $("c_pais").innerHTML = '<optgroup label="União Europeia">' + PAISES.filter(p => p[2] === "UE").map(p => `<option value="${p[0]}">${p[1]}</option>`).join("") +
+    '</optgroup><optgroup label="Fora da UE">' + PAISES.filter(p => p[2] !== "UE").map(p => `<option value="${p[0]}">${p[1]}</option>`).join("") + "</optgroup>";
+  function fillProps() { $("v_prop").innerHTML = PROPS[S.v.tipo].map(p => `<option value="${p[0]}">${p[1]}</option>`).join(""); if (!PROPS[S.v.tipo].some(p => p[0] === S.v.prop)) S.v.prop = "ICE"; }
+
+  // ---------- binding ----------
+  const vFields = ["marca","modelo","prop","fuel","cc","co2","norma","autonomia","firstReg","km","price","particulas","euro6ebis","coc"];
+  const cFields = ["pais","vendedor","comprador","transport","ptPrice","arrival","davDate","dutyZero"];
+  const kFields = ["inspecao","registo","chapas","despachante"];
+  const numeric = new Set(["cc","co2","autonomia","km","price","transport","ptPrice","inspecao","registo","chapas","despachante"]);
+  function put(el, val) { if (el.type === "checkbox") el.checked = !!val; else el.value = val ?? ""; }
+  function get(el, key) { if (el.type === "checkbox") return el.checked; return numeric.has(key) ? (el.value === "" ? 0 : Number(el.value)) : el.value; }
+  function toForm() {
+    fillProps();
+    vFields.forEach(k => put($("v_" + k), S.v[k]));
+    cFields.forEach(k => put($("c_" + k), S.c[k]));
+    kFields.forEach(k => put($("k_" + k), S.k[k]));
+    $("b_budget").value = S.budget;
+  }
+  vFields.forEach(k => $("v_" + k).addEventListener("input", e => { S.v[k] = get(e.target, k); if (k in S.src) S.src[k] = "utilizador"; render(); }));
+  cFields.forEach(k => $("c_" + k).addEventListener("input", e => { S.c[k] = get(e.target, k); render(); }));
+  kFields.forEach(k => $("k_" + k).addEventListener("input", e => { S.k[k] = get(e.target, k); render(); }));
+  $("b_budget").addEventListener("input", e => { S.budget = Number(e.target.value) || 0; renderBudget(); });
+  function setTipo(t) {
+    S.v.tipo = t; $("t_carro").setAttribute("aria-pressed", t === "carro"); $("t_moto").setAttribute("aria-pressed", t === "moto");
+    if (t === "moto" && S.v.cc > 1400 && S.src.cc !== "utilizador") { S.v.cc = 1254; }
+    fillProps(); put($("v_prop"), S.v.prop); render(); fillMakes(); renderSearch();
+  }
+  $("t_carro").onclick = () => setTipo("carro");
+  $("t_moto").onclick = () => setTipo("moto");
+  $("btnCOC").onclick = () => { ["cc","co2","norma","particulas","autonomia"].forEach(k => S.src[k] = "coc"); S.v.coc = true; put($("v_coc"), true); render(); toast("Dados técnicos marcados como do COC"); };
+
+  // ---------- context for engine ----------
+  function ctxOf(c, k) {
+    const p = PAISES.find(x => x[0] === c.pais) || PAISES[0];
+    return { davDate: c.davDate || isoD(today), origem: p[2] === "UE" ? "UE" : "terceiro", vendedor: c.vendedor, comprador: c.comprador, transport: c.transport,
+      arrival: c.arrival || null, custos: k, ptPrice: c.ptPrice || 0, ivaOrigem: p[3], dutyZero: c.dutyZero };
+  }
+  function vehOf(v, src) {
+    const est = ["cc","co2","norma","particulas","autonomia"].filter(x => src[x] === "anuncio" || src[x] === "estimado");
+    return { ...v, estimated: est, cc: v.cc || 0, co2: v.co2 || 0 };
+  }
+
+  // ---------- render calc ----------
+  const esc = (s) => String(s).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+  let last = null;
+  function render() {
+    const moto = S.v.tipo === "moto";
+    document.querySelectorAll(".hide-moto").forEach(el => el.hidden = moto || (el.querySelector("#v_particulas") ? S.v.fuel !== "gasoleo" : false) || (S.v.prop === "BEV" && !el.querySelector("#v_fuel")));
+    document.querySelectorAll(".only-phev").forEach(el => el.hidden = moto || !(S.v.prop === "PHEV" || S.v.prop === "HEV"));
+    $("v_euro6ebis").closest(".f").hidden = S.v.prop !== "PHEV" || moto;
+    const ctx = ctxOf(S.c, S.k);
+    $("dutyBox").hidden = ctx.origem === "UE";
+    document.querySelectorAll("[data-src]").forEach(el => { const s = S.src[el.dataset.src] || "utilizador"; el.className = "src " + s; el.textContent = { coc: "COC", anuncio: "Anúncio", estimado: "Estimado", utilizador: "Seu" }[s]; });
+
+    const r = calcular(vehOf(S.v, S.src), ctx); last = { r, ctx };
+    $("r_title").textContent = [S.v.marca, S.v.modelo].filter(Boolean).join(" ") || (moto ? "Moto" : "Carro");
+    $("r_total").textContent = fmt0(r.total); $("mbarTotal").textContent = fmt0(r.total);
+    let vs = `<span>ISV ${fmt0(r.isv)}</span><span>IVA PT ${fmt0(r.iva)}</span>`;
+    if (r.diff !== undefined) vs = (r.diff >= 0 ? `<span class="pill">Poupa ${fmt0(r.diff)} vs. Portugal</span>` : `<span class="pill bad">Custa mais ${fmt0(-r.diff)} que em Portugal</span>`) + vs;
+    $("r_vs").innerHTML = vs;
+    $("r_tables").textContent = `Tabelas ${r.ruleset} · DAV ${fmtDate(r.refDate)}`;
+
+    const part = (p) => `<div class="part"><div class="top"><span>${esc(p.label)}</span><span>${fmt(p.amount)}</span></div><p>${esc(p.explanation)}</p>${p.legal ? `<span class="lex">${esc(p.legal)}</span>` : ""}${p.estimated ? `<span class="est">Estimado · confirmar no COC</span>` : ""}</div>`;
+    const grp = (k, v, parts, open) => `<details class="grp"${open ? " open" : ""}><summary class="line"><span class="k">${k}</span><span class="v">${fmt(v)}</span></summary>${parts.map(part).join("")}</details>`;
+    let h = `<div class="line"><span class="k">Preço${S.c.vendedor === "geral" && S.c.comprador === "empresa" && ctx.origem === "UE" ? " sem IVA" : ""}</span><span class="v">${fmt(r.price)}</span></div>`;
+    h += `<div class="line"><span class="k">Transporte</span><span class="v">${fmt(r.transport)}</span></div>`;
+    if (r.duty) h += `<div class="line"><span class="k">Direitos aduaneiros</span><span class="v">${fmt(r.duty)}</span></div>`;
+    h += grp("ISV · Imposto sobre Veículos", r.isv, r.isvParts, true);
+    h += grp("IVA", r.iva, [r.ivaLine], false);
+    h += grp("Legalização (IMT, inspeção, registo)", r.legalTotal, r.legal, false);
+    h += `<div class="line sum"><span class="k">Total</span><span class="v">${fmt(r.total)}</span></div>`;
+    $("r_lines").innerHTML = h;
+
+    const order = { crit: 0, warn: 1, info: 2 };
+    const al = r.alerts.slice().sort((a, b) => order[a.level] - order[b.level]);
+    $("r_alcount").textContent = al.length ? `${al.length} ${al.length === 1 ? "alerta" : "alertas"}` : "";
+    $("r_alerts").innerHTML = al.length ? al.map(a => `<div class="al ${a.level}"><span class="sev">${{ crit: "Crítico", warn: "Atenção", info: "Info" }[a.level]}</span><div><b>${esc(a.title)}</b><p>${esc(a.text)}</p></div></div>`).join("")
+      : `<p class="fine">Nada a assinalar com os dados atuais.</p>`;
+
+    const iuc = r.iuc;
+    $("r_kv").innerHTML = `<div><span class="lbl">IUC anual estimado</span><span class="big">${iuc ? (iuc.amount === null ? "—" : fmt0(iuc.amount)) : "—"}</span><small>${iuc ? esc(iuc.note) : moto ? "Motos: categoria E, consulte o simulador da AT." : "Indique a data da 1.ª matrícula."}</small></div>
+      <div><span class="lbl">Idade na DAV</span><span class="big">${S.v.firstReg ? (r.ageMonths / 12).toFixed(1).replace(".", ",") + " anos" : "—"}</span><small>${r.novoIVA ? "Conta como nova para IVA" : "Usada para IVA (> 6 meses e > 6 000 km)"}</small></div>`;
+    renderBudget(); if (typeof renderPT === "function") renderPT(r);
+  }
+
+  $("btnCopy").onclick = () => {
+    if (!last) return; const r = last.r;
+    const txt = [`Matrícula PT · ${[S.v.marca, S.v.modelo].join(" ")}`, `Custo final legalizado: ${fmt(r.total)}`, `Preço: ${fmt(r.price)} · Transporte: ${fmt(r.transport)}${r.duty ? " · Direitos: " + fmt(r.duty) : ""}`,
+      `ISV: ${fmt(r.isv)}`, ...r.isvParts.map(p => `  - ${p.label}: ${fmt(p.amount)}`), `IVA: ${fmt(r.iva)} (${r.ivaLine.label})`, `Legalização: ${fmt(r.legalTotal)}`,
+      r.diff !== undefined ? `Diferença para o preço em PT: ${fmt(r.diff)}` : "", `Tabelas ${r.ruleset}, DAV a ${fmtDate(r.refDate)}. Estimativa; a liquidação oficial é feita pela AT.`].filter(Boolean).join("\n");
+    const done = () => toast("Resumo copiado");
+    try { navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt)); } catch (e) { fallbackCopy(txt); }
+  };
+  function fallbackCopy(t) { const ta = $("paste"); const old = ta.value; ta.value = t; ta.select(); try { document.execCommand("copy"); toast("Resumo copiado"); } catch (e) { toast("Selecione e copie o texto"); return; } ta.value = old; }
+  let tt; function toast(m) { const t = $("toast"); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 2200); }
+
+  // ---------- paste parser ----------
+  function num(s) { return Number(String(s).replace(/[\s.  ']/g, "").replace(",", ".")); }
+  function extract(text) {
+    const t = text.replace(/ /g, " "); const out = {}, found = [];
+    const co2 = t.match(/(\d{1,3})\s?g\s?\/\s?km/i); if (co2) { out.co2 = +co2[1]; found.push("CO₂"); }
+    if (/wltp/i.test(t)) { out.norma = "WLTP"; } else if (/nedc|nefz/i.test(t)) { out.norma = "NEDC"; }
+    const t2 = t.replace(/\d{1,3}\s?g\s?\/\s?km/gi, "");
+    const cc = t2.match(/(\d[\d.\s]{2,6})\s?(?:cm³|cm3|ccm|cc)(?![a-z])/i); if (cc) { out.cc = num(cc[1]); found.push("cilindrada"); }
+    const km = t2.match(/(\d{1,3}(?:[.\s,]\d{3})+|\d{1,6})\s?km\b/i); if (km) { out.km = num(km[1].replace(",", "")); found.push("km"); }
+    let best = 0; for (const m of t2.matchAll(/(?:€|EUR)\s?(\d{1,3}(?:[.\s]\d{3})+|\d{4,6})(?:,\d{2})?|(\d{1,3}(?:[.\s]\d{3})+|\d{4,6})(?:,\d{2})?\s?(?:€|EUR)/gi)) { const n = num(m[1] || m[2]); if (n > best && n < 900000) best = n; }
+    if (best >= 500) { out.price = best; found.push("preço"); }
+    const reg = t.match(/(?:EZ|Erstzulassung|mise en circulation|immatricolazione|first registration|matriculaci[oó]n|matr[ií]cula|Bouwjaar|registrering)\D{0,12}(\d{1,2})[\/.\-](\d{4})/i) || t.match(/\b(0?[1-9]|1[0-2])\/((?:19|20)\d{2})\b/);
+    if (reg) { out.firstReg = `${reg[2]}-${String(reg[1]).padStart(2, "0")}-15`; found.push("1.ª matrícula"); }
+    if (/plug-?in|phev|recharge|e-hybrid/i.test(t)) out.prop = "PHEV";
+    else if (/elektro(?!.*benzin)|électrique|electric|elettrica|el[eé]ctrico|\bbev\b/i.test(t) && !/hybrid|hybride|ibrid|h[ií]brido/i.test(t)) out.prop = "BEV";
+    else if (/hybrid|hybride|ibrid|h[ií]brido/i.test(t)) out.prop = "HEV";
+    else if (/erdgas|\bcng\b|gnv|metano/i.test(t)) out.prop = "GNV";
+    else out.prop = "ICE";
+    if (/diesel|gazole|gasoil|gas[oó]leo|gasolio/i.test(t)) out.fuel = "gasoleo"; else if (/benzin|essence|petrol|gasolina|benzina/i.test(t)) out.fuel = "gasolina";
+    if (/6e-?bis/i.test(t)) out.euro6ebis = true;
+    const aut = t.match(/(?:elektrische Reichweite|autonomie [ée]lectrique|electric range|autonomia el[eé]trica|autonom[ií]a el[eé]ctrica)\D{0,12}(\d{2,3})\s?km/i); if (aut) out.autonomia = +aut[1];
+    if (/§\s?25a|differenzbesteuert|r[ée]gime de la marge|margeregeling|regime del margine|margin scheme|r[ée]gimen especial/i.test(t)) out.vendedor = "margem";
+    else if (/mwst\.?\s?ausweisbar|tva r[ée]cup[ée]rable|iva deducibile|btw verrekenbaar|vat deductible|iva deducible/i.test(t)) out.vendedor = "geral";
+    else if (/\bprivat|particulier|privato|particular\b|private seller/i.test(t)) out.vendedor = "particular";
+    const brand = t.split("\n")[0].trim().match(/^([A-Za-zÀ-ÿ\-]+)\s+(.+?)(?:\s*\(|$)/); if (brand) { out.marca = ({ VW: "Volkswagen", Mercedes: "Mercedes-Benz", MB: "Mercedes-Benz", Skoda: "Skoda", "Škoda": "Skoda" })[brand[1]] || brand[1]; out.modelo = brand[2].slice(0, 40); }
+    if (/motorrad|moto\b|motorcycle|motocicl|motorfiets/i.test(t)) out.tipo = "moto";
+    return { out, found };
+  }
+  $("btnExtract").onclick = () => {
+    const { out, found } = extract($("paste").value);
+    if (!found.length) { $("extractMsg").textContent = "Não encontrei preço, km, cilindrada nem CO₂ neste texto. Preencha o formulário abaixo."; return; }
+    const tipo = out.tipo; delete out.tipo;
+    const cVend = out.vendedor; delete out.vendedor;
+    Object.assign(S.v, out);
+    ["cc","co2","firstReg","km","price","autonomia"].forEach(k => { if (k in out) S.src[k] = "anuncio"; });
+    S.src.norma = out.norma ? "anuncio" : "estimado"; if (!out.norma) S.v.norma = (S.v.firstReg && S.v.firstReg >= "2018-09-01") ? "WLTP" : "NEDC";
+    S.src.particulas = "estimado"; S.v.particulas = false; S.v.coc = false;
+    if (cVend) S.c.vendedor = cVend;
+    if (tipo && tipo !== S.v.tipo) setTipo(tipo);
+    toForm(); render();
+    $("extractMsg").textContent = `Extraído: ${found.join(", ")}. Confirme os campos marcados a laranja no COC.`;
+    if (CAT[S.v.tipo][S.v.marca]) { $("s_marca").value = S.v.marca; fillModels(); }
+  };
+
+  // ---------- importar anúncio (link / texto) com IA ----------
+  const RATES = { EUR: 1, GBP: 1.17, CHF: 1.06, PLN: 0.235, DKK: 0.134, SEK: 0.09, NOK: 0.085, CZK: 0.04, HUF: 0.0025, USD: 0.92, JPY: 0.006 };
+  const TLD = { de: "DE", fr: "FR", es: "ES", it: "IT", nl: "NL", be: "BE", at: "AT", lu: "LU", pl: "PL", dk: "DK", se: "SE", cz: "CZ", ie: "IE", fi: "FI", ch: "CH", uk: "GB", no: "NO", pt: "PT" };
+  let SAMPLE = null, MCP = null;
+  // Fora do Claude (Firebase Hosting) a IA corre no servidor: /api/import e /api/pt-prices.
+  const API = window.claude && window.claude.use ? null : "/api";
+  async function api(path, body) {
+    const r = await fetch(API + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { const e = new Error(j.erro || "erro"); e.server = j.erro || null; e.code = r.status === 429 ? "rate_limited" : "server"; throw e; }
+    return j;
+  }
+  const FILL_MAP = { cilindrada_cm3: "cc", co2_g_km: "co2", norma_co2: "norma", combustivel: "fuel", motorizacao: "prop", particulas_menor_0001: "particulas", autonomia_eletrica_km: "autonomia" };
+  async function importViaServer(url, pasted, hint) {
+    const s1 = logStep(url ? "A ler o anúncio e a procurar online os dados em falta (até 1 minuto)…" : "A extrair os dados do texto…");
+    const out = await api("/import", { url: url || undefined, text: pasted && pasted !== EXAMPLE_PASTE ? pasted : undefined });
+    const d = out.dados || {};
+    const { v, c, got } = applyAd(d, hint);
+    s1(got.length ? `Extraído do anúncio: ${got.join(", ")}` : "O anúncio não tinha dados técnicos legíveis", got.length ? "ok" : "warn");
+    Object.assign(S.v, { particulas: false, coc: false, autonomia: 0, euro6ebis: false }, v); Object.assign(S.c, c);
+    if (d.tipo && d.tipo !== S.v.tipo) setTipo(d.tipo);
+    ["cc","co2","firstReg","km","price","autonomia","norma"].forEach(k => { S.src[k] = (k === "norma" ? d.norma_co2 : v[k] != null) ? "anuncio" : "estimado"; });
+    S.src.particulas = "estimado";
+    const filled = [];
+    for (const [k, o] of Object.entries(out.completados || {})) {
+      const f = FILL_MAP[k]; if (!f || !o || o.valor == null) continue;
+      S.v[f] = o.valor; if (f in S.src) S.src[f] = "estimado";
+      const fonte = o.fonte && /^https?:/.test(o.fonte) ? new URL(o.fonte).hostname.replace(/^www\./, "") : "IA";
+      filled.push(`${k.replace(/_.*/, "")} ${o.valor === true ? "sim" : o.valor === false ? "não" : o.valor} (${fonte}, confiança ${o.confianca || "baixa"})`);
+    }
+    if (filled.length) logStep(`Completado: ${filled.join(" · ")}`, "warn");
+    (out.avisos || []).slice(0, 4).forEach(a => logStep(a, "info"));
+    if (!S.v.norma) S.v.norma = (S.v.firstReg || "") >= "2018-09-01" ? "WLTP" : "NEDC";
+    toForm(); render();
+    if (CAT[S.v.tipo][S.v.marca]) { $("s_marca").value = S.v.marca; fillModels(); }
+    $("extractMsg").textContent = "Pronto. Os campos a laranja são do anúncio ou estimados: confirme-os no COC antes de pagar.";
+    $("resultCol").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  async function ptExtract(text, want) {
+    if (API) return await api("/pt-prices", { text, vehicle: want });
+    return await SAMPLE.json(`Desta página de resultados de anúncios de viaturas em Portugal, lista os anúncios comparáveis com esta viatura: ${JSON.stringify(want)} (mesma marca e modelo, motorização equivalente, ano ±1, km até cerca de +30%). Ignora anúncios patrocinados de outros modelos, preços mensais de financiamento e valores de prestação. Responde só com JSON: {"anuncios":[{"titulo":string,"preco_eur":number,"ano":number|null,"km":number|null}]}. Lista vazia se não houver.\n\nPÁGINA:\n${text.slice(0, 60000)}`, { modelTier: "default" });
+  }
+  (async () => { const C = window.claude; if (!C || !C.use) return; try { SAMPLE = await C.use("sample"); } catch (e) {} try { MCP = await C.use("mcp"); } catch (e) {} })();
+  function logStep(txt, state = "run") { const li = document.createElement("li"); li.className = state; li.textContent = txt; $("impLog").hidden = false; $("impLog").append(li); return (t, s = "ok") => { li.textContent = t; li.className = s; }; }
+  function fromUrl(u) {
+    try {
+      const url = new URL(u), host = url.hostname.replace(/^www\./, ""), parts = host.split("."), tld = parts[parts.length - 1];
+      const out = { site: host, pais: TLD[tld === "com" && /autotrader\.co\.uk/.test(host) ? "uk" : tld] || null };
+      if (/autotrader\.co\.uk/.test(host)) out.pais = "GB";
+      const m = url.pathname.match(/\/(?:angebote|offres|annunci|ofertas|aanbod)\/([a-z0-9\-]+)/i); if (m) out.slug = m[1].replace(/-[0-9a-f]{8}-.*$/i, "").replace(/-/g, " ");
+      return out;
+    } catch (e) { return null; }
+  }
+  function textOf(res) {
+    if (!res) return "";
+    if (typeof res.payload === "string") return res.payload;
+    const t = (res.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
+    return t || (res.payload ? JSON.stringify(res.payload) : "");
+  }
+  async function browserRead(url) {
+    if (!MCP) return { err: "sem_app" };
+    try {
+      await MCP.callTool("host:claude_browser", "navigate", { url });
+      const r = await MCP.callTool("host:claude_browser", "get_page_text", {});
+      const t = textOf(r); return t && t.length > 200 ? { text: t } : { err: "vazio" };
+    } catch (e) { return { err: e && e.code || "erro" }; }
+  }
+  const FIELDS_PROMPT = `{"marca":string|null,"modelo":string|null,"versao":string|null,"tipo":"carro"|"moto"|null,"preco":number|null,"moeda":"EUR"|"GBP"|"CHF"|"PLN"|"DKK"|"SEK"|"NOK"|"CZK"|"USD"|null,"km":number|null,"primeira_matricula":"YYYY-MM"|null,"combustivel":"gasolina"|"gasoleo"|null,"motorizacao":"ICE"|"HEV"|"PHEV"|"BEV"|"GNV"|null,"cilindrada_cm3":number|null,"co2_g_km":number|null,"norma_co2":"WLTP"|"NEDC"|null,"euro":string|null,"autonomia_eletrica_km":number|null,"pais":"código ISO-2"|null,"vendedor":"particular"|"margem"|"geral"|null,"cor":string|null,"potencia_kw":number|null}`;
+  async function aiExtract(text, hint) {
+    const prompt = `Extrai os dados deste anúncio de viatura usada. Responde só com JSON neste formato:\n${FIELDS_PROMPT}\nRegras: usa null quando o dado não está no texto (não inventes). "vendedor": "margem" se o anúncio indicar regime da margem (Differenzbesteuert, §25a, TVA non récupérable, margeregeling); "geral" se o IVA for dedutível (MwSt. ausweisbar, TVA récupérable, BTW verrekenbaar); "particular" se for vendedor privado. "motorizacao": HEV híbrido normal, PHEV plug-in, BEV elétrico, ICE combustão. Preço: o preço pedido (bruto, com IVA se aplicável).\nPistas do link: ${JSON.stringify(hint || {})}\n\nTEXTO DO ANÚNCIO:\n${text.slice(0, 60000)}`;
+    return await SAMPLE.json(prompt, { modelTier: "default" });
+  }
+  async function aiFill(known, missing, searchText) {
+    const prompt = `És especialista em homologação automóvel europeia. Para esta viatura, indica os valores em falta tal como constariam do COC (Certificado de Conformidade) da versão descrita.\nViatura: ${JSON.stringify(known)}\nCampos em falta: ${missing.join(", ")}\n${searchText ? "Resultados de pesquisa web (usa-os como fonte principal quando forem relevantes):\n" + searchText.slice(0, 20000) + "\n" : ""}Responde só com JSON: {"valores":{<campo>:valor|null}, "fonte":{<campo>:"pesquisa"|"conhecimento"}, "confianca":{<campo>:"alta"|"media"|"baixa"}, "nota":string curta em português de Portugal}.\nCampos possíveis e formatos: cilindrada_cm3 number, co2_g_km number (valor combinado), norma_co2 "WLTP"|"NEDC" (WLTP para 1.ª matrícula desde 09/2018), combustivel "gasolina"|"gasoleo", motorizacao "ICE"|"HEV"|"PHEV"|"BEV"|"GNV", particulas_menor_0001 boolean (gasóleo Euro 6 com filtro de partículas costuma ter < 0,001 g/km), autonomia_eletrica_km number. Se não souberes com razoável certeza, devolve null.`;
+    return await SAMPLE.json(prompt, { modelTier: "default" });
+  }
+  function applyAd(d, hint) {
+    const v = {}, c = {}, got = [];
+    if (d.marca) v.marca = d.marca; if (d.modelo || d.versao) v.modelo = [d.modelo, d.versao].filter(Boolean).join(" ").slice(0, 48);
+    if (d.preco) { const r = RATES[d.moeda || "EUR"] || 1; v.price = Math.round(d.preco * r); got.push(d.moeda && d.moeda !== "EUR" ? `preço (${d.moeda} → € a câmbio aproximado)` : "preço"); }
+    if (d.km != null) { v.km = d.km; got.push("km"); }
+    if (d.primeira_matricula) { v.firstReg = d.primeira_matricula.slice(0, 7) + "-15"; got.push("1.ª matrícula"); }
+    if (d.combustivel) v.fuel = d.combustivel;
+    if (d.motorizacao) v.prop = d.motorizacao;
+    if (d.cilindrada_cm3) { v.cc = d.cilindrada_cm3; got.push("cilindrada"); }
+    if (d.co2_g_km != null) { v.co2 = d.co2_g_km; got.push("CO₂"); }
+    if (d.norma_co2) v.norma = d.norma_co2;
+    if (d.autonomia_eletrica_km) v.autonomia = d.autonomia_eletrica_km;
+    if (d.euro && /6e-?bis/i.test(d.euro)) v.euro6ebis = true;
+    const pais = d.pais || (hint && hint.pais);
+    if (pais && PAISES.some(p => p[0] === pais)) c.pais = pais;
+    if (d.vendedor) c.vendedor = d.vendedor;
+    return { v, c, got };
+  }
+  async function importAd() {
+    const url = $("adUrl").value.trim(), pasted = $("paste").value.trim();
+    $("impLog").innerHTML = ""; $("btnImport").disabled = true;
+    const hint = url ? fromUrl(url) : null;
+    try {
+      if (API) { await importViaServer(url, pasted, hint); return; }
+      let text = "";
+      if (url) {
+        const s1 = logStep("A abrir o anúncio…");
+        const r = await browserRead(url);
+        if (r.text) { text = r.text; s1(`Página lida (${hint && hint.site || "anúncio"})`); }
+        else if (pasted && pasted !== EXAMPLE_PASTE) { text = pasted; s1("Não consegui abrir o link aqui; uso o texto colado", "warn"); }
+        else { s1("Este ecrã não consegue abrir sites externos. Na app desktop do Claude abre sozinho; aqui, abra o anúncio, copie a página toda (Ctrl+A, Ctrl+C) e cole em baixo.", "warn"); $("pasteBox").open = true; if (hint && hint.slug) applySlug(hint); return; }
+      } else if (pasted) text = pasted;
+      else { logStep("Cole um link ou o texto do anúncio.", "warn"); return; }
+
+      if (!SAMPLE) { // sem IA: extração por regras
+        $("btnExtract").click(); logStep("Extração simples por regras (IA indisponível neste ecrã)", "warn"); return;
+      }
+      const s2 = logStep("A extrair os dados com IA…");
+      const d = await aiExtract(text, hint);
+      const { v, c, got } = applyAd(d || {}, hint);
+      s2(got.length ? `Extraído do anúncio: ${got.join(", ")}` : "O anúncio não tinha dados técnicos legíveis", got.length ? "ok" : "warn");
+      Object.assign(S.v, { particulas: false, coc: false, autonomia: 0, euro6ebis: false }, v); Object.assign(S.c, c);
+      if (d && d.tipo && d.tipo !== S.v.tipo) setTipo(d.tipo);
+      ["cc","co2","firstReg","km","price","autonomia","norma"].forEach(k => { S.src[k] = (k === "norma" ? d && d.norma_co2 : v[k] != null) ? "anuncio" : "estimado"; });
+      S.src.particulas = "estimado";
+
+      // dados em falta
+      const need = [];
+      if (S.v.tipo === "carro" && S.v.prop !== "BEV") {
+        if (!v.cc) need.push("cilindrada_cm3"); if (v.co2 == null) need.push("co2_g_km"); if (!(d && d.norma_co2)) need.push("norma_co2");
+        if (!d || !d.combustivel) need.push("combustivel");
+        if (S.v.fuel === "gasoleo" || !d || !d.combustivel) need.push("particulas_menor_0001");
+        if (S.v.prop === "PHEV" && !v.autonomia) need.push("autonomia_eletrica_km");
+      } else if (S.v.tipo === "moto" && !v.cc) need.push("cilindrada_cm3");
+      if (need.length) {
+        const known = { marca: S.v.marca, modelo: S.v.modelo, primeira_matricula: S.v.firstReg, combustivel: d && d.combustivel, motorizacao: d && d.motorizacao, potencia_kw: d && d.potencia_kw, euro: d && d.euro, cilindrada_cm3: v.cc || null, co2_g_km: v.co2 ?? null };
+        let searchText = "";
+        if (MCP) {
+          const s3 = logStep("A pesquisar online os dados em falta…");
+          const q = `${S.v.marca} ${S.v.modelo} ${(S.v.firstReg || "").slice(0, 4)} ${need.includes("co2_g_km") ? "CO2 g/km WLTP" : ""} ${need.includes("cilindrada_cm3") ? "cm3" : ""} technische Daten`;
+          const r = await browserRead("https://duckduckgo.com/html/?q=" + encodeURIComponent(q));
+          if (r.text) { searchText = r.text; s3("Pesquisa web feita"); } else s3("Pesquisa web indisponível neste ecrã; uso o conhecimento do modelo", "warn");
+        }
+        const s4 = logStep(`A completar: ${need.map(n => n.replace(/_.*/, "")).join(", ")}…`);
+        const f = await aiFill(known, need, searchText);
+        const val = (f && f.valores) || {}, conf = (f && f.confianca) || {}, src = (f && f.fonte) || {}, filled = [];
+        const map = { cilindrada_cm3: "cc", co2_g_km: "co2", norma_co2: "norma", combustivel: "fuel", motorizacao: "prop", particulas_menor_0001: "particulas", autonomia_eletrica_km: "autonomia" };
+        for (const k of need) if (val[k] != null) { S.v[map[k]] = val[k]; if (map[k] in S.src) S.src[map[k]] = "estimado"; filled.push(`${k.replace(/_.*/, "")} ${val[k] === true ? "sim" : val[k] === false ? "não" : val[k]} (${src[k] === "pesquisa" ? "pesquisa web" : "IA"}, confiança ${conf[k] || "baixa"})`); }
+        if (!S.v.norma) S.v.norma = (S.v.firstReg || "") >= "2018-09-01" ? "WLTP" : "NEDC";
+        s4(filled.length ? `Completado: ${filled.join(" · ")}` : "Não foi possível completar; preencha à mão", filled.length ? "warn" : "err");
+        if (f && f.nota) logStep(f.nota, "info");
+      }
+      toForm(); render();
+      if (CAT[S.v.tipo][S.v.marca]) { $("s_marca").value = S.v.marca; fillModels(); }
+      $("extractMsg").textContent = "Pronto. Os campos a laranja são do anúncio ou estimados: confirme-os no COC antes de pagar.";
+      $("resultCol").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (e) {
+      logStep(e && e.server ? e.server : e && e.code === "not_granted" ? "Sem autorização para usar o Claude nesta página. Use o texto colado e o formulário." : e && e.code === "rate_limited" ? "Muitos pedidos seguidos. Tente daqui a um minuto." : "Não foi possível importar este anúncio. Cole o texto ou preencha o formulário.", "err");
+    } finally { $("btnImport").disabled = false; }
+  }
+  function applySlug(h) {
+    const words = h.slug.split(" "); const mk = Object.keys(CAT.carro).concat(Object.keys(CAT.moto)).find(m => slug(m) === words[0] || slug(m).startsWith(words[0]));
+    if (mk) { S.v.marca = mk; S.v.modelo = words.slice(1).join(" ").slice(0, 40); }
+    if (h.pais && PAISES.some(p => p[0] === h.pais)) S.c.pais = h.pais; toForm(); render();
+  }
+  $("btnImport").onclick = importAd;
+  $("adUrl").addEventListener("keydown", e => { if (e.key === "Enter") importAd(); });
+
+  // ---------- comparar com o mercado português ----------
+  function ptSearchUrl() {
+    const moto = S.v.tipo === "moto", mk = slug(S.v.marca || "");
+    const spec = Object.entries(CAT[S.v.tipo][S.v.marca] || {}).find(([m]) => (S.v.modelo || "").toLowerCase().startsWith(m.toLowerCase().split(" ")[0]) || m === S.v.modelo);
+    const md = spec ? spec[1][5] : slug((S.v.modelo || "").split(" ")[0]);
+    const y = S.v.firstReg ? +S.v.firstReg.slice(0, 4) : null, km = S.v.km ? Math.round(S.v.km * 1.3 / 5000) * 5000 : null;
+    const p = [];
+    if (y) { p.push("search%5Bfilter_float_first_registration_year%3Afrom%5D=" + (y - 1)); p.push("search%5Bfilter_float_first_registration_year%3Ato%5D=" + (y + 1)); }
+    if (km) p.push("search%5Bfilter_float_mileage%3Ato%5D=" + km);
+    if (!moto && S.v.fuel && S.v.prop === "ICE") p.push("search%5Bfilter_enum_fuel_type%5D=" + (S.v.fuel === "gasoleo" ? "diesel" : "gaz"));
+    return `https://www.standvirtual.com/${moto ? "motos" : "carros"}/${mk}${md ? "/" + md : ""}${p.length ? "?" + p.join("&") : ""}`;
+  }
+  function median(a) { const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2); }
+  function plog(t, s = "run") { const li = document.createElement("li"); li.className = s; li.textContent = t; $("ptLog").hidden = false; $("ptLog").append(li); return (tt, ss = "ok") => { li.textContent = tt; li.className = ss; }; }
+  async function comparePT() {
+    $("ptLog").innerHTML = ""; $("btnPT").disabled = true;
+    try {
+      const url = ptSearchUrl(); $("ptLink").href = url;
+      let text = $("ptPaste").value.trim();
+      if (!text) {
+        const s = plog("A abrir o Standvirtual…");
+        const r = await browserRead(url);
+        if (r.text) { text = r.text; s("Resultados do Standvirtual lidos"); }
+        else { s("Abra o Standvirtual com o botão ao lado, copie a página (Ctrl+A, Ctrl+C) e cole em baixo.", "warn"); $("ptPasteBox").open = true; return; }
+      }
+      if (!SAMPLE && !API) { plog("A IA não está disponível neste ecrã. Introduza o preço em \"Mesmo modelo em PT\".", "warn"); return; }
+      const s2 = plog("A ler os preços dos anúncios…");
+      const want = { marca: S.v.marca, modelo: S.v.modelo, ano: (S.v.firstReg || "").slice(0, 4), km: S.v.km, combustivel: S.v.fuel, motorizacao: S.v.prop };
+      const d = await ptExtract(text, want);
+      const ads = ((d && d.anuncios) || []).filter(a => a.preco_eur > 500 && a.preco_eur < 1000000);
+      if (!ads.length) { s2("Não encontrei anúncios comparáveis. Alargue a pesquisa no Standvirtual e cole de novo.", "warn"); return; }
+      s2(`${ads.length} anúncios comparáveis`);
+      S.pt = { ads, med: median(ads.map(a => a.preco_eur)), min: Math.min(...ads.map(a => a.preco_eur)), max: Math.max(...ads.map(a => a.preco_eur)), at: new Date() };
+      S.c.ptPrice = S.pt.med; put($("c_ptPrice"), S.c.ptPrice); render();
+    } catch (e) {
+      plog(e && e.server ? e.server : e && e.code === "not_granted" ? "Sem autorização para usar o Claude nesta página." : e && e.code === "rate_limited" ? "Muitos pedidos seguidos. Tente daqui a um minuto." : "Não foi possível comparar. Introduza o preço em \"Mesmo modelo em PT\".", "err");
+    } finally { $("btnPT").disabled = false; }
+  }
+  function renderPT(r) {
+    $("ptLink").href = ptSearchUrl();
+    if (!S.pt) return;
+    const total = r.total / 100, pt = S.pt, diff = Math.round(pt.med - total), pct = Math.round(diff / pt.med * 100);
+    const lo = Math.min(pt.min, total), hi = Math.max(pt.max, total), pos = (v) => hi === lo ? 50 : ((v - lo) / (hi - lo)) * 100;
+    $("ptCmp").innerHTML = `<div class="pt-head"><div><span class="lbl">Mediana em Portugal</span><span class="big">${fmt0(pt.med * 100)}</span><small>${pt.ads.length} anúncios · ${fmt0(pt.min * 100)} a ${fmt0(pt.max * 100)}</small></div>
+      <div><span class="lbl">Importar fica</span><span class="big" style="color:${diff >= 0 ? "var(--ok)" : "var(--red)"}">${diff >= 0 ? "−" : "+"}${fmt0(Math.abs(diff) * 100)}</span><small>${diff >= 0 ? `${pct}% abaixo da mediana` : `${-pct}% acima da mediana`}</small></div></div>
+      <div class="pt-bar" role="img" aria-label="Posição do custo de importação face aos preços em Portugal"><span class="rng" style="left:${pos(pt.min)}%;right:${100 - pos(pt.max)}%"></span>${pt.ads.map(a => `<span class="dot" style="left:${pos(a.preco_eur)}%"></span>`).join("")}<span class="med" style="left:${pos(pt.med)}%"></span><span class="me" style="left:${pos(total)}%"></span></div>
+      <div class="pt-legend"><span><i class="k-me"></i>Importado ${fmt0(r.total)}</span><span><i class="k-dot"></i>Anúncios PT</span><span><i class="k-med"></i>Mediana</span></div>
+      <small class="mono" style="color:var(--muted);font-size:10.5px">Preços pedidos no Standvirtual a ${pt.at.toLocaleDateString("pt-PT")}; o preço final de venda costuma ser mais baixo.</small>`;
+  }
+  $("btnPT").onclick = comparePT;
+
+  // ---------- budget (inverse) ----------
+  function renderBudget() {
+    const ctx = ctxOf(S.c, S.k); const yNow = new Date(ctx.davDate).getFullYear();
+    $("b_dav").textContent = fmtDate(ctx.davDate);
+    $("b_vehicle").textContent = `${[S.v.marca, S.v.modelo].filter(Boolean).join(" ")} · ${S.v.cc} cm³${S.v.tipo === "carro" && S.v.prop !== "BEV" ? ` · ${S.v.co2} g/km ${S.v.norma}` : ""} · ${(PAISES.find(p => p[0] === S.c.pais) || [])[1]} · ${$("c_vendedor").selectedOptions[0]?.textContent || ""}`;
+    const myYear = S.v.firstReg ? +S.v.firstReg.slice(0, 4) : null;
+    let rows = "";
+    for (let y = yNow; y >= yNow - 12; y--) {
+      const fr = y === yNow ? `${y}-01-15` : `${y}-07-01`;
+      if (fr > ctx.davDate) continue;
+      const age = (new Date(ctx.davDate) - new Date(fr)) / (365.2425 * 864e5);
+      const km = Math.max(1000, Math.round(age * 15000));
+      const v = { ...vehOf(S.v, S.src), firstReg: fr, km };
+      const pm = precoMaximo(v, ctx, S.budget);
+      const probe = calcular({ ...v, price: Math.max(0, pm.max) / 100 }, ctx);
+      const red = probe.isvParts.find(p => p.code === "ISV_IDADE");
+      rows += `<tr class="${y === myYear ? "me" : ""}"><td>${y}${probe.novoIVA ? ' <span class="src estimado">novo p/ IVA</span>' : ""}</td><td class="n">${red ? red.label.split("· ")[1] : "—"}</td><td class="n">${fmt0(probe.isv)}</td><td class="n">${fmt0(probe.iva)}</td><td class="n"><b>${pm.max > 0 ? fmt0(pm.max) : "não chega"}</b></td>
+        <td class="n">${pm.max > 0 ? `<button class="btn link" type="button" data-y="${y}" data-p="${Math.floor(pm.max / 100)}">Procurar</button>` : ""}</td></tr>`;
+    }
+    $("b_rows").innerHTML = rows;
+  }
+  $("b_rows").addEventListener("click", e => { const b = e.target.closest("button[data-y]"); if (!b) return; $("s_ano").value = b.dataset.y; $("s_anoMax").value = b.dataset.y; $("s_preco").value = b.dataset.p; location.hash = "procurar"; renderSearch(); });
+  $("btnFromBudget").onclick = () => { const ctx = ctxOf(S.c, S.k); const pm = precoMaximo(vehOf(S.v, S.src), ctx, S.budget); $("s_preco").value = Math.max(0, Math.floor(pm.max / 100)); renderSearch(); toast("Preço máximo aplicado"); };
+
+  // ---------- search: catalog (specs típicos para a demonstração) ----------
+  // [cilindrada, motorização/combustível, CO2 WLTP g/km, preço novo €, autonomia elétrica km, slug do site]
+  const CAT = {
+    carro: {
+      "Audi": { "A3 Sportback 35 TFSI": [1498,"gasolina",128,36000,0,"a3"], "A4 Avant 40 TDI": [1968,"gasoleo",135,52000,0,"a4"], "Q3 35 TFSI": [1498,"gasolina",150,45000,0,"q3"], "Q4 e-tron": [0,"BEV",0,52000,0,"q4-e-tron"] },
+      "BMW": { "Série 1 118i": [1499,"gasolina",130,33000,0,"118"], "Série 3 320d": [1995,"gasoleo",118,50000,0,"320"], "Série 3 330e": [1998,"PHEV",36,55000,60,"330"], "X1 sDrive18d": [1995,"gasoleo",130,45000,0,"x1"], "i4 eDrive40": [0,"BEV",0,60000,0,"i4"] },
+      "Mercedes-Benz": { "Classe A 180": [1332,"gasolina",135,35000,0,"a-180"], "Classe C 220 d": [1993,"gasoleo",125,52000,0,"c-220"], "GLC 300 e": [1999,"PHEV",20,70000,100,"glc-300"], "EQA 250": [0,"BEV",0,52000,0,"eqa"] },
+      "Volkswagen": { "Golf 1.5 TSI": [1498,"gasolina",130,32000,0,"golf"], "Golf 2.0 TDI": [1968,"gasoleo",120,34000,0,"golf"], "Passat Variant 2.0 TDI": [1968,"gasoleo",128,45000,0,"passat"], "Tiguan 1.5 TSI": [1498,"gasolina",155,42000,0,"tiguan"], "ID.3": [0,"BEV",0,40000,0,"id.3"] },
+      "Peugeot": { "308 1.2 PureTech": [1199,"gasolina",128,30000,0,"308"], "3008 1.5 BlueHDi": [1499,"gasoleo",125,38000,0,"3008"], "e-208": [0,"BEV",0,34000,0,"208"] },
+      "Renault": { "Clio 1.0 TCe": [999,"gasolina",118,20000,0,"clio"], "Captur E-Tech Hybrid": [1598,"HEV",105,29000,0,"captur"], "Mégane E-Tech": [0,"BEV",0,40000,0,"megane"] },
+      "Toyota": { "Yaris 1.5 Hybrid": [1490,"HEV",92,23000,0,"yaris"], "Corolla 1.8 Hybrid": [1798,"HEV",105,31000,0,"corolla"], "RAV4 2.5 Hybrid": [2487,"HEV",125,42000,0,"rav-4"] },
+      "Skoda": { "Octavia Combi 2.0 TDI": [1968,"gasoleo",118,34000,0,"octavia"], "Superb iV": [1395,"PHEV",28,48000,62,"superb"] },
+      "Volvo": { "XC40 B4": [1969,"gasolina",170,45000,0,"xc40"], "XC60 T6 Recharge": [1969,"PHEV",22,68000,80,"xc60"] },
+      "Tesla": { "Model 3": [0,"BEV",0,45000,0,"model-3"], "Model Y": [0,"BEV",0,48000,0,"model-y"] },
+      "Porsche": { "Macan S": [2894,"gasolina",250,85000,0,"macan"], "911 Carrera": [2981,"gasolina",240,125000,0,"911"] }
+    },
+    moto: {
+      "BMW": { "R 1250 GS": [1254,"gasolina",0,22000,0,"r-1250-gs"], "S 1000 RR": [999,"gasolina",0,24000,0,"s-1000-rr"] },
+      "Honda": { "CRF1100L Africa Twin": [1084,"gasolina",0,16000,0,"crf-1100"], "CB650R": [649,"gasolina",0,9500,0,"cb-650"] },
+      "Yamaha": { "MT-07": [689,"gasolina",0,8000,0,"mt-07"], "Tracer 9": [890,"gasolina",0,13500,0,"tracer-9"], "TMAX 560": [562,"gasolina",0,14000,0,"tmax"] },
+      "KTM": { "390 Duke": [373,"gasolina",0,6000,0,"390-duke"], "890 Adventure": [889,"gasolina",0,14000,0,"890-adventure"] },
+      "Ducati": { "Monster": [937,"gasolina",0,13000,0,"monster"], "Multistrada V4": [1158,"gasolina",0,24000,0,"multistrada"] },
+      "Kawasaki": { "Z900": [948,"gasolina",0,10500,0,"z-900"] },
+      "Triumph": { "Street Triple 765": [765,"gasolina",0,11500,0,"street-triple"] },
+      "Vespa": { "GTS 300": [278,"gasolina",0,7000,0,"gts"] },
+      "Zero": { "SR/F": [0,"BEV",0,22000,0,"sr-f"] }
+    }
+  };
+  const CORES = [["Preto","#18191c"],["Branco","#efefec"],["Cinzento","#7e838a"],["Prata","#bfc3c8"],["Azul","#1f4fa3"],["Vermelho","#c4161c"],["Verde","#2f6b4a"],["Amarelo","#e2b200"],["Castanho","#6b4a33"],["Laranja","#e2621c"]];
+  const MARKETS = [ // país, fator de preço face à média, peso
+    ["DE",1.00,5],["FR",1.04,2],["BE",1.01,2],["NL",1.06,2],["IT",1.03,2],["ES",1.05,1],["AT",1.03,1],["PL",0.93,1]
+  ];
+
+  const slug = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim().replace(/\s+/g, "-");
+  const enc = encodeURIComponent;
+  function curQ() {
+    const marca = $("s_marca").value, modelo = $("s_modelo").value, spec = modelo && CAT[S.v.tipo][marca] ? CAT[S.v.tipo][marca][modelo] : null;
+    return { tipo: S.v.tipo, marca, modelo, mslug: spec ? spec[5] : "", ano: $("s_ano").value, anoMax: $("s_anoMax").value, km: $("s_km").value, preco: $("s_preco").value, cor: $("s_cor").value, fuel: $("s_fuel").value };
+  }
+  function sites(q) {
+    const mk = slug(q.marca), md = q.mslug || "", txt = enc([q.marca, q.modelo].filter(Boolean).join(" ")), moto = q.tipo === "moto";
+    const as24 = (tld, cy, path = "") => `https://www.autoscout24.${tld}${path}/${moto ? "lst-moto" : "lst"}/${mk}${md ? "/" + md : ""}?atype=${moto ? "B" : "C"}&cy=${cy}&sort=price&desc=0${q.ano ? "&fregfrom=" + q.ano : ""}${q.anoMax ? "&fregto=" + q.anoMax : ""}${q.km ? "&kmto=" + q.km : ""}${q.preco ? "&priceto=" + q.preco : ""}`;
+    return [
+      { g: "UE", cc: "DE", name: "mobile.de", url: `https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&dam=false&s=${moto ? "Motorbike" : "Car"}&vc=${moto ? "Motorbike" : "Car"}${q.preco ? "&p=%3A" + q.preco : ""}${q.ano ? "&fr=" + q.ano + "%3A" + (q.anoMax || "") : ""}${q.km ? "&ml=%3A" + q.km : ""}`, note: "Maior mercado da Europa. Ano, km e preço vão filtrados; escolha marca e modelo no site." },
+      { g: "UE", cc: "EU", name: "AutoScout24", url: as24("de", "D%2CA%2CB%2CE%2CF%2CI%2CL%2CNL"), note: "Pesquisa em 8 países de uma vez (DE, AT, BE, ES, FR, IT, LU, NL)." },
+      { g: "UE", cc: "FR", name: "leboncoin", url: `https://www.leboncoin.fr/recherche?category=${moto ? 3 : 2}&text=${txt}${q.preco ? "&price=min-" + q.preco : ""}${q.km ? "&mileage=min-" + q.km : ""}${q.ano ? "&regdate=" + q.ano + "-" + (q.anoMax || "max") : ""}`, note: "Muitos particulares: sem IVA em PT se for usado." },
+      { g: "UE", cc: "FR", name: "AutoScout24 FR", url: as24("fr", "F"), note: "Stands franceses; \"TVA récupérable\" interessa a empresas." },
+      { g: "UE", cc: "BE", name: "AutoScout24 BE", url: as24("be", "B", "/fr"), note: "Bélgica: muitos carros de empresa com 3 a 5 anos." },
+      { g: "UE", cc: "BE", name: "2dehands", url: `https://www.2dehands.be/q/${txt.replace(/%20/g, "+")}/`, note: "Classificados belgas, particulares e stands." },
+      { g: "UE", cc: "NL", name: "AutoScout24 NL", url: as24("nl", "NL"), note: "Países Baixos." },
+      { g: "UE", cc: "NL", name: "Marktplaats", url: `https://www.marktplaats.nl/q/${txt.replace(/%20/g, "+")}/`, note: "Classificados neerlandeses." },
+      { g: "UE", cc: "AT", name: "willhaben", url: `https://www.willhaben.at/iad/gebrauchtwagen/${moto ? "motorrad/motorradboerse" : "auto/gebrauchtwagenboerse"}?keyword=${txt}${q.preco ? "&PRICE_TO=" + q.preco : ""}`, note: "Principal site austríaco." },
+      { g: "UE", cc: "IT", name: "AutoScout24 IT", url: as24("it", "I"), note: "Itália." },
+      { g: "UE", cc: "IT", name: "Subito", url: `https://www.subito.it/annunci-italia/vendita/${moto ? "moto-e-scooter" : "auto"}/?q=${txt}${q.preco ? "&pe=" + q.preco : ""}`, note: "Classificados italianos." },
+      { g: "UE", cc: "ES", name: "coches.net", url: moto ? `https://motos.coches.net/segunda-mano/?KeyWords=${txt}` : `https://www.coches.net/segunda-mano/?KeyWords=${txt}${q.preco ? "&MaxPrice=" + q.preco : ""}${q.km ? "&MaxKms=" + q.km : ""}${q.ano ? "&MinYear=" + q.ano : ""}`, note: "Espanha: transporte mais barato até Portugal." },
+      { g: "UE", cc: "PL", name: "Otomoto", url: `https://www.otomoto.pl/${moto ? "motocykle-i-quady" : "osobowe"}/${mk}${md ? "/" + md : ""}`, note: "Preços baixos; confirme o histórico e o COC com cuidado." },
+      { g: "fora", cc: "CH", name: "AutoScout24 CH", url: `https://www.autoscout24.ch/de/s?q=${txt}`, note: "País terceiro: direitos aduaneiros, IVA 23% e sem redução por idade." },
+      { g: "fora", cc: "GB", name: "AutoTrader UK", url: `https://www.autotrader.co.uk/${moto ? "bike-search" : "car-search"}?make=${enc(q.marca || "")}${q.ano ? "&year-from=" + q.ano : ""}&postcode=SW1A1AA`, note: "Volante à direita. Pós-Brexit: alfândega, IVA e homologação." },
+      { g: "PT", cc: "PT", name: "Standvirtual", url: `https://www.standvirtual.com/${moto ? "motos" : "carros"}/${mk}${md ? "/" + md : ""}${q.ano ? "?search%5Bfilter_float_first_registration_year%3Afrom%5D=" + q.ano : ""}`, note: "Preço de referência em Portugal para comparar." },
+    ];
+  }
+  const SITE_FOR = { DE: "mobile.de", FR: "AutoScout24 FR", BE: "AutoScout24 BE", NL: "AutoScout24 NL", IT: "AutoScout24 IT", ES: "coches.net", AT: "willhaben", PL: "Otomoto" };
+
+  // ---------- search: filtros ----------
+  function fillMakes() {
+    const makes = Object.keys(CAT[S.v.tipo]);
+    const cur = $("s_marca").value;
+    $("s_marca").innerHTML = makes.map(m => `<option>${m}</option>`).join("");
+    $("s_marca").value = makes.includes(cur) ? cur : makes[0];
+    fillModels();
+  }
+  function fillModels() {
+    const models = Object.keys(CAT[S.v.tipo][$("s_marca").value] || {});
+    const cur = $("s_modelo").value;
+    $("s_modelo").innerHTML = `<option value="">Todos os modelos</option>` + models.map(m => `<option>${m}</option>`).join("");
+    $("s_modelo").value = models.includes(cur) ? cur : "";
+  }
+  (function fillStatic() {
+    const yNow = today.getFullYear(); let o = "";
+    for (let y = yNow; y >= yNow - 15; y--) o += `<option>${y}</option>`;
+    $("s_ano").innerHTML = `<option value="">Qualquer</option>` + o; $("s_anoMax").innerHTML = `<option value="">Qualquer</option>` + o;
+    $("s_cor").innerHTML = `<option value="">Qualquer</option>` + CORES.map(c => `<option>${c[0]}</option>`).join("");
+  })();
+
+  // ---------- search: fonte de dados (adaptador) ----------
+  // Interface comum: search(q) -> [{ id, source, country, url, title, marca, modelo, year, month, km, color, price, seller, spec, photos }]
+  // DemoSource gera exemplos determinísticos; um MobileDeSource (fase 2) chamará o backend com a Search API.
+  function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function hashStr(s) { let h = 2166136261; for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  const DemoSource = {
+    id: "demo",
+    search(q) {
+      const r = rng(hashStr(JSON.stringify(q))), pickW = (arr) => { const tot = arr.reduce((s, x) => s + x[2], 0); let x = r() * tot; for (const it of arr) { x -= it[2]; if (x <= 0) return it; } return arr[0]; };
+      const yNow = today.getFullYear();
+      const y0 = +(q.ano || yNow - 8), y1 = Math.min(+(q.anoMax || yNow), yNow);
+      const models = Object.entries(CAT[q.tipo][q.marca] || {}).filter(([m, s]) => (!q.modelo || m === q.modelo) && (!q.fuel || s[1] === q.fuel));
+      const out = [];
+      if (!models.length || y0 > y1) return out;
+      for (let i = 0; i < 60 && out.length < 18; i++) {
+        const [modelo, spec] = models[Math.floor(r() * models.length)];
+        const year = y0 + Math.floor(r() * (y1 - y0 + 1)), month = 1 + Math.floor(r() * 12);
+        const firstReg = `${year}-${String(month).padStart(2, "0")}-15`; if (firstReg > isoD(today)) continue;
+        const age = Math.max(0.2, (today - new Date(firstReg)) / (365.2425 * 864e5));
+        let km = Math.round(age * (q.tipo === "moto" ? 3000 + r() * 6000 : 8000 + r() * 14000) / 100) * 100;
+        if (q.km && km > +q.km) km = Math.round(+q.km * (0.55 + r() * 0.43) / 100) * 100;
+        const mk = pickW(MARKETS);
+        const color = q.cor ? CORES.find(c => c[0] === q.cor) : CORES[Math.floor(r() * (q.tipo === "moto" ? 8 : 6))];
+        const sellerRoll = r(), seller = sellerRoll < 0.3 ? "particular" : sellerRoll < 0.8 ? "margem" : "geral";
+        const base = spec[3] * Math.pow(0.885, age) * (1 - Math.min(0.3, km / 600000)) * mk[1] * (0.9 + r() * 0.2);
+        const price = Math.max(1500, Math.round(base / 100) * 100 - (r() < 0.5 ? 10 : 0));
+        if (q.preco && price > +q.preco) continue;
+        const ptRef = Math.round(spec[3] * Math.pow(0.885, age) * (1 - Math.min(0.3, km / 600000)) * 1.2 / 100) * 100;
+        out.push({ id: "demo-" + i, source: SITE_FOR[mk[0]], country: mk[0], marca: q.marca, modelo, title: `${q.marca} ${modelo}`, year, firstReg, km, color, price, seller, spec, ptRef, demo: true });
+      }
+      return out;
+    }
+  };
+  let SOURCE = DemoSource;
+
+  // ---------- search: fotos ilustrativas (SVG) ----------
+  function shade(hex, f) { const n = parseInt(hex.slice(1), 16); let rr = n >> 16, gg = n >> 8 & 255, bb = n & 255; const t = f < 0 ? 0 : 255, p = Math.abs(f); rr = Math.round((t - rr) * p + rr); gg = Math.round((t - gg) * p + gg); bb = Math.round((t - bb) * p + bb); return `rgb(${rr},${gg},${bb})`; }
+  const BACKS = [["#d9dadc","#a9abaf"],["#9fb6c9","#5d6a74"],["#f0b38a","#5b4a52"]];
+  function photo(tipo, hex, v) {
+    const [b0, b1] = BACKS[v % 3], id = "g" + Math.random().toString(36).slice(2, 8), dark = shade(hex, -0.45), hi = shade(hex, 0.35);
+    const sky = `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${b0}"/><stop offset="1" stop-color="${b1}"/></linearGradient></defs><rect width="320" height="180" fill="url(#${id})"/><rect y="148" width="320" height="32" fill="#2a2b2e" opacity=".35"/>`;
+    const wheel = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#141516"/><circle cx="${x}" cy="${y}" r="${r * 0.55}" fill="#9a9da2"/><circle cx="${x}" cy="${y}" r="${r * 0.18}" fill="#3a3c40"/>`;
+    let body;
+    if (tipo === "moto") {
+      body = `${wheel(92, 132, 30)}${wheel(232, 132, 30)}<path d="M92 132 L140 92 L200 92 L232 132" stroke="#2b2c2f" stroke-width="7" fill="none"/><path d="M128 78 Q150 60 190 66 L206 86 L136 92 Z" fill="${hex}"/><path d="M150 70 Q170 64 186 68" stroke="${hi}" stroke-width="4" fill="none"/><path d="M196 88 L226 72 L238 74" stroke="#2b2c2f" stroke-width="6" fill="none"/><rect x="104" y="80" width="40" height="9" fill="#1d1e20"/><path d="M226 72 L246 66" stroke="#555" stroke-width="5"/>`;
+    } else {
+      body = `<ellipse cx="165" cy="150" rx="140" ry="7" fill="#000" opacity=".25"/><path d="M28 124 Q30 104 58 99 L102 94 Q124 70 150 64 L208 62 Q232 64 254 92 L288 98 Q302 102 302 120 L302 130 Q302 136 294 136 L36 136 Q26 136 28 124Z" fill="${hex}"/>
+        <path d="M112 94 Q130 74 152 70 L176 70 L176 94Z M184 70 L206 70 Q226 72 242 94 L184 94Z" fill="#1f2a33" opacity=".85"/><path d="M40 112 L296 112" stroke="${dark}" stroke-width="2" opacity=".5"/><path d="M60 102 L250 98" stroke="${hi}" stroke-width="3" opacity=".6"/>
+        ${wheel(86, 136, 22)}${wheel(246, 136, 22)}<rect x="290" y="108" width="10" height="6" fill="#fff4c2"/>`;
+    }
+    const tr = v === 1 ? `transform="translate(320 0) scale(-1 1)"` : v === 2 ? `transform="translate(-200 -110) scale(2.2)"` : "";
+    return `<svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Imagem ilustrativa">${sky}<g ${tr}>${body}</g></svg>`;
+  }
+
+  // ---------- search: resultados ----------
+  let RESULTS = [];
+  function specToVehicle(l) {
+    const [cc, f, co2, , aut] = l.spec, prop = ["HEV","PHEV","BEV"].includes(f) ? f : "ICE";
+    return { tipo: S.v.tipo, marca: l.marca, modelo: l.modelo, prop, fuel: f === "gasoleo" ? "gasoleo" : "gasolina", cc, co2, norma: l.year >= 2019 ? "WLTP" : "NEDC",
+      particulas: f === "gasoleo" && l.year >= 2018, autonomia: aut, euro6ebis: false, firstReg: l.firstReg, km: l.km, price: l.price, coc: true };
+  }
+  function runSearch() {
+    const q = curQ();
+    const list = SOURCE.search(q);
+    RESULTS = list.map(l => {
+      const v = specToVehicle(l), c = { ...S.c, pais: l.country, vendedor: l.seller, ptPrice: l.ptRef, arrival: null };
+      const r = calcular({ ...v, estimated: ["co2","norma","particulas"] }, ctxOf(c, S.k));
+      return { l, v, c, r };
+    });
+    renderResults();
+  }
+  function renderResults() {
+    const sort = $("s_sort").value, key = { total: x => x.r.total, price: x => x.l.price, km: x => x.l.km, year: x => -x.l.year, saving: x => -(x.r.diff || 0) }[sort];
+    RESULTS.sort((a, b) => key(a) - key(b));
+    const q = curQ();
+    $("s_count").textContent = `${RESULTS.length} ${RESULTS.length === 1 ? "resultado" : "resultados"} · ${q.marca}${q.modelo ? " " + q.modelo : ""}`;
+    $("s_note").textContent = `Custo final com tabelas ${RULESET.id} · DAV ${fmtDate(S.c.davDate || isoD(today))} · transporte ${fmt0(Math.round(S.c.transport * 100))}`;
+    const sellerTxt = { particular: "Particular", margem: "Stand · margem", geral: "Stand · IVA dedutível" };
+    const siteList = sites(q);
+    $("s_results").innerHTML = RESULTS.length ? RESULTS.map((x, i) => {
+      const l = x.l, site = siteList.find(s => s.name === l.source) || siteList[0];
+      const fuelTxt = { gasolina: "Gasolina", gasoleo: "Gasóleo", HEV: "Híbrido", PHEV: "Plug-in", BEV: "Elétrico" }[l.spec[1]];
+      return `<article class="card">
+        <div class="gal"><div>${photo(S.v.tipo, l.color[1], 0)}</div><div>${photo(S.v.tipo, l.color[1], 1)}</div><div>${photo(S.v.tipo, l.color[1], 2)}</div><span class="tag">Exemplo</span><span class="cc">${l.country}</span></div>
+        <div class="meta"><h3>${esc(l.title)}</h3><span>${l.firstReg.slice(5, 7)}/${l.year} · ${l.km.toLocaleString("pt-PT")} km · ${fuelTxt} · ${l.color[0]}</span><span>${sellerTxt[l.seller]} · ${esc(l.source)}</span></div>
+        <div class="money">
+          <div><span class="lbl">Preço no anúncio</span><span class="p">${fmt0(l.price * 100)}</span><small>ISV ${fmt0(x.r.isv)}${x.r.iva ? " · IVA " + fmt0(x.r.iva) : ""}</small></div>
+          <div><span class="lbl">Final em Portugal</span><span class="t">${fmt0(x.r.total)}</span><small class="${x.r.diff > 0 ? "good" : ""}">${x.r.diff > 0 ? "poupa ~" + fmt0(x.r.diff) : "sem poupança"} vs. PT (est.)</small></div>
+        </div>
+        <div class="acts"><a href="${site.url}" target="_blank" rel="noopener noreferrer" title="Em modo demonstração abre a mesma pesquisa no site real">Abrir no ${esc(l.source)} <span>↗</span></a><button type="button" data-i="${i}">Ver cálculo <span>→</span></button></div>
+      </article>`;
+    }).join("") : `<div class="empty">Nenhum resultado com estes filtros. Alargue os anos, os quilómetros ou o preço.</div>`;
+  }
+  $("s_results").addEventListener("click", e => {
+    const b = e.target.closest("button[data-i]"); if (!b) return; const x = RESULTS[+b.dataset.i];
+    Object.assign(S.v, x.v); S.c.pais = x.c.pais; S.c.vendedor = x.c.vendedor; S.c.ptPrice = x.l.ptRef;
+    Object.assign(S.src, { cc: "anuncio", co2: "estimado", norma: "estimado", particulas: "estimado", autonomia: "anuncio", firstReg: "anuncio", km: "anuncio", price: "anuncio" });
+    toForm(); render(); location.hash = "calcular"; toast("Anúncio carregado na calculadora");
+  });
+
+  function renderSearch() {
+    const q = curQ(), list = sites(q);
+    const groups = [["UE", "União Europeia", "Usados com matrícula UE têm redução de ISV por idade"], ["fora", "Fora da UE", "Direitos aduaneiros, IVA 23% e ISV sem redução"], ["PT", "Portugal", "Para comparar"]];
+    $("s_groups").innerHTML = groups.map(([g, t, n]) => `<div class="group-h"><span>${t}</span><small>${n}</small></div><div class="sites">` +
+      list.filter(s => s.g === g).map(s => `<a class="site${g === "fora" ? " third" : ""}" href="${s.url}" target="_blank" rel="noopener noreferrer"><div class="top"><b>${s.cc}</b><span>${g === "fora" ? "País terceiro" : g === "PT" ? "Referência" : "UE"}</span></div><div class="name">${esc(s.name)}</div><div class="note">${esc(s.note)}</div><div class="go"><span>Abrir pesquisa</span><span>↗</span></div></a>`).join("") + "</div>").join("");
+    runSearch();
+  }
+  $("s_marca").addEventListener("change", () => { fillModels(); renderSearch(); });
+  ["s_modelo","s_ano","s_anoMax","s_km","s_cor","s_fuel"].forEach(id => $(id).addEventListener("change", renderSearch));
+  $("s_preco").addEventListener("input", renderSearch);
+  $("s_sort").addEventListener("change", renderResults);
+  $("btnSearch").onclick = () => { renderSearch(); toast("Pesquisa atualizada"); };
+
+  // ---------- guide ----------
+  const STEPS = [
+    ["Antes de pagar: garantir o COC", "Peça o Certificado de Conformidade ao vendedor ou ao fabricante. Sem COC, o fabricante confirma a homologação no Modelo 9 ou o IMT faz homologação individual: taxa de 165 € e mais tempo.", "Antes da compra"],
+    ["Consulta de homologação no IMT", "Pedido online ao IMT para obter o número de homologação nacional a partir do COC.", "Logo após a compra"],
+    ["Inspeção para matrícula", "Centro de inspeção de categoria B. Emite o Modelo 112, válido 90 dias úteis.", "Dias 1 a 7 após a chegada"],
+    ["DAV na Autoridade Tributária", "Declaração Aduaneira de Veículo com certificado de matrícula estrangeiro, fatura ou declaração de venda, COC e documento de transporte. Liquida o ISV (e o IVA, se for nova). A alfândega atribui a matrícula. Fora do prazo há coima.", "Até 20 dias úteis após a chegada"],
+    ["Processo no IMT (Modelo 9)", "Taxa de 45 € com COC ou homologação nacional. O certificado de matrícula estrangeiro original fica no IMT.", "Até 10 dias após a DAV"],
+    ["Registo de propriedade", "Na conservatória ou no Automóvel Online. Depois é emitido o Documento Único / certificado de matrícula.", "Após o IMT"],
+    ["IUC todos os anos", "Para viaturas da UE conta a data da 1.ª matrícula estrangeira. Em 2026 paga-se no mês da matrícula; a partir de 2028 passa a abril (DL 161/2026).", "Anual"],
+  ];
+  $("g_steps").innerHTML = STEPS.map((s, i) => `<div class="step"><div class="no">${i + 1}</div><div class="body"><h3>${s[0]}</h3><p>${s[1]}</p><span class="when">${s[2]}</span></div></div>`).join("");
+  const DOCS = ["COC (Certificado de Conformidade)", "Certificado de matrícula estrangeiro (Parte I e II)", "Fatura ou declaração de venda", "Documento de transporte (CMR) ou prova de entrada em PT", "Ficha de inspeção Modelo 112", "Medição de CO₂ por centro técnico, se o COC não o indicar", "Documento de identificação e NIF do comprador"];
+  function renderDocs() {
+    $("g_docs").innerHTML = DOCS.map((d, i) => `<li><label class="check" for="doc${i}"><input type="checkbox" id="doc${i}" ${S.docs[i] ? "checked" : ""}> ${d}</label></li>`).join("");
+  }
+  $("g_docs").addEventListener("change", e => { const i = e.target.id.slice(3); S.docs[i] = e.target.checked; try { localStorage.setItem("mpt-docs", JSON.stringify(S.docs)); } catch (err) {} });
+  function renderPlan() {
+    const a = $("g_arrival").value; if (!a) { $("g_plan").innerHTML = ""; return; }
+    const insp = addBusinessDays(a, 5), dav = addBusinessDays(a, 20);
+    $("g_plan").innerHTML = `<div><span class="lbl">Inspeção até</span><span class="big">${fmtDate(insp)}</span><small>5 dias úteis, margem para repetir</small></div><div><span class="lbl">DAV até</span><span class="big" style="color:var(--red)">${fmtDate(dav)}</span><small>20 dias úteis, sem fins de semana e feriados nacionais</small></div>`;
+  }
+  $("g_arrival").addEventListener("input", renderPlan);
+
+  // ---------- tables view ----------
+  function renderTables() {
+    const R = RULESET, eur = (n) => n.toFixed(2).replace(".", ",");
+    const band = (tbl, unit, i) => { const lo = i === 0 ? 0 : tbl[i - 1][0] + 1; return tbl[i][0] === Infinity ? `> ${tbl[i - 1][0]} ${unit}` : `${i === 0 ? "até" : lo + " –"} ${tbl[i][0]} ${unit}`; };
+    const t3 = (title, sub, tbl, unit) => `<div class="tile"><header>${title}<small>${sub}</small></header><div class="tbl-wrap"><table><thead><tr><th>Escalão</th><th class="n">Taxa €</th><th class="n">Parcela a abater €</th></tr></thead><tbody>${tbl.map((r, i) => `<tr><td>${band(tbl, unit, i)}</td><td class="n">${eur(r[1])}</td><td class="n">${eur(r[2])}</td></tr>`).join("")}</tbody></table></div></div>`;
+    let h = `<div class="stack">` + t3("ISV · Cilindrada", "Tabela A", R.isv.cil, "cm³") + t3("ISV · CO₂ WLTP gasolina", "Tabela A", R.isv.amb.WLTP.gasolina, "g/km") + t3("ISV · CO₂ WLTP gasóleo", "Tabela A · +500 € sem partículas", R.isv.amb.WLTP.gasoleo, "g/km") + `</div><div class="stack">`;
+    h += `<div class="tile"><header>ISV · Redução por idade<small>Tabela D · usados UE</small></header><div class="tbl-wrap"><table><thead><tr><th>Anos de uso</th><th class="n">Redução</th></tr></thead><tbody>${R.isv.tabelaD.map((r, i) => `<tr><td>${r[0] === Infinity ? "mais de 10" : i === 0 ? "até 1" : `${R.isv.tabelaD[i - 1][0]} a ${r[0]}`}</td><td class="n">${r[1]}%</td></tr>`).join("")}</tbody></table></div></div>`;
+    h += `<div class="tile"><header>ISV · Motociclos<small>Tabela C · valor fixo</small></header><div class="tbl-wrap"><table><thead><tr><th>Cilindrada</th><th class="n">ISV €</th></tr></thead><tbody>${R.isv.tabelaC.slice(1).map((r, i) => `<tr><td>${r[0] === Infinity ? "mais de 750 cm³" : `${R.isv.tabelaC[i][0] + 1} – ${r[0]} cm³`}</td><td class="n">${eur(r[1])}</td></tr>`).join("")}</tbody></table></div></div>`;
+    h += `<div class="tile"><header>ISV · Taxas intermédias<small>CISV, art. 8.º</small></header><div class="tbl-wrap"><table><thead><tr><th>Caso</th><th class="n">Paga</th></tr></thead><tbody>
+      <tr><td>PHEV, autonomia ≥ 50 km e &lt; 50 g/km</td><td class="n">25%</td></tr><tr><td>PHEV Euro 6e-bis, autonomia ≥ 50 km e &lt; 80 g/km</td><td class="n">25%</td></tr>
+      <tr><td>Híbrido, autonomia &gt; 50 km e &lt; 50 g/km</td><td class="n">60%</td></tr><tr><td>Gás natural exclusivo</td><td class="n">40%</td></tr><tr><td>Elétrico</td><td class="n">isento</td></tr></tbody></table></div></div>`;
+    h += t3("ISV · CO₂ NEDC gasolina", "Tabela A", R.isv.amb.NEDC.gasolina, "g/km") + t3("ISV · CO₂ NEDC gasóleo", "Tabela A", R.isv.amb.NEDC.gasoleo, "g/km") + `</div>`;
+    $("t_tables").innerHTML = h;
+  }
+
+  $("mbar").onclick = () => $("resultCol").scrollIntoView({ behavior: "smooth" });
+  // ---------- routing ----------
+  const VIEWS = ["calcular", "preco-maximo", "procurar", "guia", "tabelas"];
+  function route() {
+    const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "calcular";
+    VIEWS.forEach(n => $("v-" + n).hidden = n !== v); $("mbar").hidden = v !== "calcular";
+    document.querySelectorAll(".nav a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
+    if (v === "guia" && !$("g_arrival").value) { $("g_arrival").value = S.c.arrival; renderPlan(); }
+  }
+  window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
+
+  // ---------- boot ----------
+  $("paste").value = "";
+  toForm(); renderDocs(); renderTables();
+  fillMakes(); $("s_marca").value = "Volkswagen"; fillModels(); $("s_modelo").value = "Golf 2.0 TDI"; $("s_ano").value = 2018; $("s_anoMax").value = 2022; $("s_km").value = 120000;
+  render(); renderSearch(); route();
+})();
+</script>
+</body>
+</html>
